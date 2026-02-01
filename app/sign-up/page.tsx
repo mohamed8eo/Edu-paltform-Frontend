@@ -49,10 +49,29 @@ export default function SignUpPage() {
 
   const handleSocialSignUp = async (provider: string) => {
     setIsLoading(true)
-    // Simulate social auth
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    router.push("/verify-email")
+    try {
+      const res = await fetch("http://localhost:8080/auth/sign-in-social", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ provider }),
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to initiate social login")
+      }
+
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error("Social sign up error:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

@@ -32,6 +32,13 @@ export interface ResetPasswordPayload {
   password: string;
 }
 
+export type SocialProvider = 'google' | 'github';
+
+export interface SignInSocialPayload {
+  provider: SocialProvider;
+  callbackURL?: string;
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   let data;
   try {
@@ -100,6 +107,15 @@ export const authApi = {
 
   resetPassword: async (payload: ResetPasswordPayload) => {
     const res = await fetch(`${API_BASE_URL}/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(res);
+  },
+
+  signInSocial: async (payload: SignInSocialPayload) => {
+    const res = await fetch(`${API_BASE_URL}/sign-in-social`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

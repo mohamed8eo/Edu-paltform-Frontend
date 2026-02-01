@@ -1,0 +1,165 @@
+'use client'
+
+import { useState } from 'react'
+import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
+import { CourseCard } from '@/components/course-card'
+import { CategoryCard } from '@/components/category-card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Search, TrendingUp, Sparkles } from 'lucide-react'
+import { courses, categories } from '@/lib/mock-data'
+
+export default function HomePage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+
+  const filteredCourses = courses.filter((course) => {
+    const matchesSearch = 
+      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    
+    const matchesCategory = !selectedCategory || course.category === selectedCategory
+
+    return matchesSearch && matchesCategory
+  })
+
+  const handleCategoryClick = (categoryName: string) => {
+    setSelectedCategory(selectedCategory === categoryName ? null : categoryName)
+  }
+
+  const handleEnroll = (courseId: string) => {
+    console.log('[v0] Enrolling in course:', courseId)
+    // Add your enrollment logic here
+  }
+
+  const handleSave = (courseId: string) => {
+    console.log('[v0] Saving course:', courseId)
+    // Add your save logic here
+  }
+
+  return (
+    <div className="min-h-screen">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
+              Learn Anything, Anytime
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground text-pretty">
+              Access thousands of free YouTube courses, organized and ready for you to master new skills
+            </p>
+            
+            {/* Search Bar */}
+            <div className="relative max-w-2xl mx-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search courses, topics, or skills..."
+                className="pl-10 h-12 text-base"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        {/* Categories */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl md:text-3xl font-bold">Browse by Category</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                onClick={() => handleCategoryClick(category.name)}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Courses */}
+        <section className="space-y-6">
+          <Tabs defaultValue="all" className="w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold">
+                {selectedCategory ? `${selectedCategory} Courses` : 'All Courses'}
+              </h2>
+              <TabsList>
+                <TabsTrigger value="all">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="trending">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Trending
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="all" className="space-y-6">
+              {selectedCategory && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Filtering by: <strong>{selectedCategory}</strong>
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setSelectedCategory(null)}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              )}
+              
+              {filteredCourses.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">No courses found matching your criteria.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      onEnroll={handleEnroll}
+                      onSave={handleSave}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="trending" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses
+                  .sort((a, b) => b.views - a.views)
+                  .slice(0, 6)
+                  .map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      onEnroll={handleEnroll}
+                      onSave={handleSave}
+                    />
+                  ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
