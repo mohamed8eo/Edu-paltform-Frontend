@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Logo } from "@/components/logo"
 import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react"
-import { authApi } from "@/app/auth-api"
+import { authApi, tokenManager } from "@/app/auth-api"
 
 export default function SignInPage() {
   const router = useRouter()
@@ -24,12 +24,8 @@ export default function SignInPage() {
   })
 
   useEffect(() => {
-    const hasCookie = document.cookie
-      .split("; ")
-      .some((row) => row.startsWith("better-auth.session_token="))
-    const hasLocalStorage = localStorage.getItem("better-auth.session_token")
-
-    if (hasCookie || hasLocalStorage) {
+    // Check if user already has a valid token
+    if (tokenManager.hasToken()) {
       router.push("/home")
     }
   }, [router])
@@ -44,10 +40,11 @@ export default function SignInPage() {
         password: formData.password
       })
       
+      // Token is automatically stored in authApi.signIn
       router.push("/home")
     } catch (error) {
       console.error("Sign in error:", error)
-      // You could show a toast or error message here
+      alert("Sign in failed. Please check your credentials.")
     } finally {
       setIsLoading(false)
     }

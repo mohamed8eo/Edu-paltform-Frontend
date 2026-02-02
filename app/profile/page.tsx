@@ -149,10 +149,17 @@ export default function ProfilePage() {
               <CardContent className="p-6 space-y-6">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage 
-                      src={user?.image || undefined} 
+                    <AvatarImage
+                      src={user?.image || undefined}
                       alt={user?.name || "User"}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        console.error(
+                          "Failed to load avatar image:",
+                          user?.image,
+                        );
+                        e.currentTarget.style.display = "none";
+                      }}
                     />
                     <AvatarFallback className="text-2xl">
                       {user?.name

@@ -35,13 +35,14 @@ export default function SignUpPage() {
         password: formData.password
       })
       
+      // Token is automatically stored in authApi.signUp
       // Store email for verification page
       localStorage.setItem("verificationEmail", formData.email)
       
       router.push("/verify-email")
     } catch (error) {
       console.error("Sign up error:", error)
-      // You could show a toast or error message here
+      alert("Sign up failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -113,7 +114,7 @@ export default function SignUpPage() {
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   />
                   <path
                     fill="currentColor"

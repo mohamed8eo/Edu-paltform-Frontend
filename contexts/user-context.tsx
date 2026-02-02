@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { tokenManager } from "@/app/auth-api";
 
 interface UserData {
   id: string;
@@ -34,8 +35,28 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const fetchUser = async () => {
     try {
       setError(null);
+      
+      // Get token
+      const token = tokenManager.getToken();
+      
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      
+      // Add Authorization header
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/me", {
         credentials: "include",
+        headers,
       });
 
       if (!response.ok) {

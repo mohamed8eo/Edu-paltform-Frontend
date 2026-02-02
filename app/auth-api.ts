@@ -39,6 +39,51 @@ export interface SignInSocialPayload {
   callbackURL?: string;
 }
 
+export interface AuthResponse {
+  message: string;
+  token: string;
+  userId: string;
+  userRole: string;
+  userLastLoginMethod: string;
+}
+
+// Token management functions
+const TOKEN_KEY = "better-auth.session_token";
+
+export const tokenManager = {
+  setToken: (token: string) => {
+    // Store in localStorage
+    localStorage.setItem(TOKEN_KEY, token);
+    
+    // Also set as cookie for consistency with social auth
+    document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
+  },
+  
+  getToken: (): string | null => {
+    // Try localStorage first
+    const localToken = localStorage.getItem(TOKEN_KEY);
+    if (localToken) return localToken;
+    
+    // Fallback to cookie
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === TOKEN_KEY) return value;
+    }
+    
+    return null;
+  },
+  
+  removeToken: () => {
+    localStorage.removeItem(TOKEN_KEY);
+    document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`;
+  },
+  
+  hasToken: (): boolean => {
+    return !!tokenManager.getToken();
+  }
+};
+
 async function handleResponse<T>(response: Response): Promise<T> {
   let data;
   try {
@@ -55,42 +100,70 @@ async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(data.message || "An error occurred");
   }
+
   return data;
 }
 
+// Helper to get headers with auth token
+function getAuthHeaders(): HeadersInit {
+  const token = tokenManager.getToken();
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
 export const authApi = {
-  signUp: async (payload: SignUpPayload) => {
+  signUp: async (payload: SignUpPayload): Promise<AuthResponse> => {
     const res = await fetch(`${API_BASE_URL}/sign-up`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return handleResponse(res);
+    const data = await handleResponse<AuthResponse>(res);
+    
+    // Store the token
+    if (data.token) {
+      tokenManager.setToken(data.token);
+    }
+    
+    return data;
   },
 
-  signIn: async (payload: SignInPayload) => {
+  signIn: async (payload: SignInPayload): Promise<AuthResponse> => {
     const res = await fetch(`${API_BASE_URL}/sign-in`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return handleResponse(res);
+    const data = await handleResponse<AuthResponse>(res);
+    
+    // Store the token
+    if (data.token) {
+      tokenManager.setToken(data.token);
+    }
+    
+    return data;
   },
 
   sendOtp: async (payload: SendOtpPayload) => {
     const res = await fetch(`${API_BASE_URL}/send-otp`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify(payload),
     });
     return handleResponse(res);
   },
 
   verifyOtp: async (payload: VerifyOtpPayload) => {
-    // Note: Endpoint specified as verify-OTP in prompt
     const res = await fetch(`${API_BASE_URL}/verify-OTP`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify(payload),
     });
     return handleResponse(res);
@@ -126,6 +199,7 @@ export const authApi = {
   getSession: async () => {
     const res = await fetch(`${API_BASE_URL}/session`, {
       method: "GET",
+      headers: getAuthHeaders(),
       credentials: "include",
     });
     if (!res.ok) {
@@ -133,4 +207,9 @@ export const authApi = {
     }
     return handleResponse(res);
   },
+  
+  signOut: async () => {
+    tokenManager.removeToken();
+    // You can also call a backend endpoint if needed
+  }
 };

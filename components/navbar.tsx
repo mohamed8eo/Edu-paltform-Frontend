@@ -123,6 +123,10 @@ export function Navbar() {
                     src={user.image || undefined}
                     alt={user.name || "User"}
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      console.error("Failed to load avatar image:", user.image);
+                      e.currentTarget.style.display = "none";
+                    }}
                   />
                   <AvatarFallback>
                     {user.name
