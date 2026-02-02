@@ -5,9 +5,12 @@ import Link from "next/link"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { usePathname } from "next/navigation"
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  const isHomePage = pathname === "/"
 
   const menuItems = [
     { href: "#about", label: "About" },
@@ -30,7 +33,7 @@ export function MobileMenu() {
           <SheetDescription>Navigate to different sections of the website</SheetDescription>
         </SheetHeader>
         <nav className="flex flex-col gap-1 mt-8">
-          {menuItems.map((item) => (
+          {isHomePage && menuItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -42,12 +45,16 @@ export function MobileMenu() {
           ))}
         </nav>
         <div className="flex flex-col gap-2 mt-8 pt-6 border-t border-border">
-          <Button variant="outline" className="w-full bg-transparent" asChild onClick={() => setOpen(false)}>
-            <Link href="/sign-in">Sign In</Link>
-          </Button>
-          <Button className="w-full" asChild onClick={() => setOpen(false)}>
-            <Link href="/sign-up">Sign Up</Link>
-          </Button>
+          {isHomePage && (
+            <>
+              <Button variant="outline" className="w-full bg-transparent" asChild onClick={() => setOpen(false)}>
+                <Link href="/sign-in">Sign In</Link>
+              </Button>
+              <Button className="w-full" asChild onClick={() => setOpen(false)}>
+                <Link href="/sign-up">Sign Up</Link>
+              </Button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

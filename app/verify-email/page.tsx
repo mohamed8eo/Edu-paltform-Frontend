@@ -117,7 +117,7 @@ export default function VerifyEmailPage() {
       // Redirect after showing success
       setTimeout(() => {
         localStorage.removeItem("verificationEmail")
-        router.push("/")
+        router.push("/home")
       }, 2000)
     } catch (error) {
       console.error("OTP verification error:", error)

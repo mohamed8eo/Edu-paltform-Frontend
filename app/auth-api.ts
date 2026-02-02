@@ -122,4 +122,15 @@ export const authApi = {
     });
     return handleResponse(res);
   },
+
+  getSession: async () => {
+    const res = await fetch(`${API_BASE_URL}/session`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      return null;
+    }
+    return handleResponse(res);
+  },
 };

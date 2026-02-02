@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,17 @@ export default function SignInPage() {
     password: "",
   })
 
+  useEffect(() => {
+    const hasCookie = document.cookie
+      .split("; ")
+      .some((row) => row.startsWith("better-auth.session_token="))
+    const hasLocalStorage = localStorage.getItem("better-auth.session_token")
+
+    if (hasCookie || hasLocalStorage) {
+      router.push("/home")
+    }
+  }, [router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -33,7 +44,7 @@ export default function SignInPage() {
         password: formData.password
       })
       
-      router.push("/")
+      router.push("/home")
     } catch (error) {
       console.error("Sign in error:", error)
       // You could show a toast or error message here

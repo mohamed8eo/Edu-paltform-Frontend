@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { CourseCard } from '@/components/course-card'
@@ -12,6 +13,29 @@ import { Search, TrendingUp, Sparkles } from 'lucide-react'
 import { courses, categories } from '@/lib/mock-data'
 
 export default function HomePage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/check')
+        if (res.ok) {
+          setIsAuthenticated(true)
+        } else {
+          router.push('/')
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        router.push('/')
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkAuth()
+  }, [router])
+
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
@@ -37,7 +61,14 @@ export default function HomePage() {
 
   const handleSave = (courseId: string) => {
     console.log('[v0] Saving course:', courseId)
-    // Add your save logic here
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
   return (

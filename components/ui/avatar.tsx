@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import * as AvatarPrimitive from '@radix-ui/react-avatar'
+import Image from 'next/image'
 
 import { cn } from '@/lib/utils'
 
@@ -23,12 +24,33 @@ function Avatar({
 
 function AvatarImage({
   className,
+  src,
+  alt,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Image> & { src?: string }) {
+  // Check if src is an external URL
+  const isExternal = src?.startsWith('http://') || src?.startsWith('https://')
+  
+  if (isExternal && src) {
+    return (
+      <div className={cn('aspect-square size-full relative', className)}>
+        <Image
+          src={src}
+          alt={alt || 'Avatar'}
+          fill
+          className="object-cover"
+          unoptimized
+        />
+      </div>
+    )
+  }
+  
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn('aspect-square size-full', className)}
+      src={src}
+      alt={alt}
       {...props}
     />
   )

@@ -58,7 +58,6 @@ export function AuthDialog({ children, className }: { children?: React.ReactNode
   const [email, setEmail] = useState("")
   const [mounted, setMounted] = useState(false)
 
-  // Only render dialog content after mount to avoid hydration issues
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -177,13 +176,6 @@ function SignInForm({
   onSignUpClick: () => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<z.infer<typeof signInSchema>>({
-    resolver: zodResolver(signInSchema),
-  })
 
   const onSubmit = async (data: z.infer<typeof signInSchema>) => {
     setIsLoading(true)
@@ -198,6 +190,14 @@ function SignInForm({
       setIsLoading(false)
     }
   }
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
+  })
 
   const handleSocialSignIn = async (provider: "google" | "github") => {
     setIsLoading(true)
@@ -288,6 +288,15 @@ function SignInForm({
             />
           </svg>
           Google
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => handleSocialSignIn("github")}
+          disabled={isLoading}
+        >
+          <Github className="mr-2 h-4 w-4" />
+          GitHub
         </Button>
         <Button
           type="button"
