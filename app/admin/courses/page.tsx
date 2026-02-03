@@ -17,9 +17,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { CourseForm } from "@/components/admin/course-form";
-import { Trash2, Edit2 } from "lucide-react";
+import { Trash2, Edit2, Plus } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import type { Course, ApiCategory, CategoryTreeItem } from "@/types/course";
 
 const API_BASE_URL = "/api/admin";
@@ -27,8 +36,12 @@ const API_BASE_URL = "/api/admin";
 export default function CoursesPage() {
   const [categories, setCategories] = useState<CategoryTreeItem[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [deletingCourseSlug, setDeletingCourseSlug] = useState<string | null>(
+    null,
+  );
 
   const fetchCategories = async () => {
     try {
@@ -45,6 +58,7 @@ export default function CoursesPage() {
   };
 
   const fetchCourses = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/admin/course/all", {
         method: "GET",
@@ -55,6 +69,8 @@ export default function CoursesPage() {
       setCourses(data.courses || []);
     } catch (error) {
       console.error("Error fetching courses:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,15 +127,59 @@ export default function CoursesPage() {
     }
   };
 
-  const handleUpdateCourse = (data: Course) => {
-    setCourses((prev) =>
-      prev.map((course) => (course.id === data.id ? data : course)),
-    );
-    setEditingCourse(null);
+  const handleUpdateCourse = async (data: Course) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/course/update/${data.slug}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            title: data.title,
+            description: data.description,
+            thumbnail: data.thumbnail,
+            level: data.level,
+            language: data.language,
+            categoryIds: data.categoryIds,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update course");
+      }
+
+      // Refresh the courses list
+      await fetchCourses();
+    } catch (error) {
+      console.error("Error updating course:", error);
+      throw error;
+    }
   };
 
-  const handleDeleteCourse = (id: string) => {
-    setCourses((prev) => prev.filter((course) => course.id !== id));
+  const handleDeleteCourse = async (slug: string) => {
+    setDeletingCourseSlug(slug);
+    try {
+      const response = await fetch(`${API_BASE_URL}/course/delete/${slug}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete course");
+      }
+
+      // Refresh the courses list
+      await fetchCourses();
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      throw error;
+    } finally {
+      setDeletingCourseSlug(null);
+    }
   };
 
   const filteredCourses = courses.filter(
@@ -146,17 +206,30 @@ export default function CoursesPage() {
             Manage your courses from YouTube collections
           </p>
         </div>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Course
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Course</DialogTitle>
+              <DialogDescription>
+                Create a new course from YouTube
+              </DialogDescription>
+            </DialogHeader>
+            <CourseForm
+              categories={flatCategories}
+              onSubmit={handleAddCourse}
+              onSuccess={() => setIsAddDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <CourseForm
-            categories={flatCategories}
-            initialData={editingCourse || undefined}
-            onSubmit={editingCourse ? handleUpdateCourse : handleAddCourse}
-          />
-        </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader>
@@ -170,9 +243,13 @@ export default function CoursesPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
 
-              <div className="space-y-2">
-                {filteredCourses.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                {isLoading ? (
+                  <div className="col-span-4 flex justify-center py-12">
+                    <Spinner className="w-8 h-8" />
+                  </div>
+                ) : filteredCourses.length === 0 ? (
+                  <p className="col-span-4 text-sm text-muted-foreground py-4">
                     {searchTerm
                       ? "No courses found."
                       : "No courses yet. Create one to get started."}
@@ -181,20 +258,20 @@ export default function CoursesPage() {
                   filteredCourses.map((course) => (
                     <div
                       key={course.id}
-                      className="flex items-start justify-between gap-4 p-4 border rounded-lg hover:bg-muted/50 transition"
+                      className="flex flex-col items-start justify-between gap-4 p-4 border rounded-lg hover:bg-muted/50 transition"
                     >
-                      <div className="flex gap-4 flex-1">
+                      <div className="flex gap-4 w-full">
                         <img
                           src={course.thumbnail || "/placeholder-course-1.jpg"}
                           alt={course.title}
                           className="w-20 h-20 object-cover rounded"
                         />
-                        <div className="flex-1">
-                          <p className="font-medium">{course.title}</p>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{course.title}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
                             {course.description}
                           </p>
-                          <div className="flex items-center gap-2 mt-2 text-xs">
+                          <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
                             <span className="px-2 py-1 bg-muted rounded">
                               {course.level}
                             </span>
@@ -212,22 +289,45 @@ export default function CoursesPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingCourse(course)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
+                      <div className="flex items-center gap-2 w-full">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex-1"
+                            >
+                              <Edit2 className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Course</DialogTitle>
+                              <DialogDescription>
+                                Update course details
+                              </DialogDescription>
+                            </DialogHeader>
+                            <CourseForm
+                              categories={flatCategories}
+                              initialData={course}
+                              onSubmit={handleUpdateCourse}
+                              onSuccess={() => {}}
+                            />
+                          </DialogContent>
+                        </Dialog>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-destructive hover:bg-destructive/10"
+                              className="text-destructive hover:bg-destructive/10 flex-1"
+                              disabled={deletingCourseSlug === course.slug}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              {deletingCourseSlug === course.slug
+                                ? "Deleting..."
+                                : "Delete"}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -238,7 +338,7 @@ export default function CoursesPage() {
                             <div className="flex gap-3 justify-end">
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDeleteCourse(course.id)}
+                                onClick={() => handleDeleteCourse(course.slug)}
                                 className="bg-destructive hover:bg-destructive/90"
                               >
                                 Delete

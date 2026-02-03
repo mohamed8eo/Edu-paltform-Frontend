@@ -1,18 +1,14 @@
-
+export interface Course {
   id: string;
   title: string;
+  slug?: string;
   description: string;
   thumbnail: string;
-  youtubeUrl: string;
-  category: string;
-  instructor: string;
-  duration: string;
+  youtubeUrl?: string;
   level: "Beginner" | "Intermediate" | "Advanced";
-  views: number;
-  enrolledCount: number;
-  rating: number;
-  tags: string[];
-  publishedAt: string;
+  language?: string;
+  categoryIds?: string[];
+  [key: string]: any;
 }
 
 export interface Category {
@@ -41,6 +37,7 @@ export interface CategoryTreeItem {
   description: string;
   parentId: string | null;
   createdAt: string;
+  updatedAt?: string;
   children: CategoryTreeItem[];
 }
 

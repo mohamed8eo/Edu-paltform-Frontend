@@ -1,51 +1,78 @@
-'use client'
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
-import type { Course, Category } from '@/types/course'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { Course, Category } from "@/types/course";
 
 interface CourseFormProps {
-  categories: Category[]
-  initialData?: Course
-  onSubmit: (data: Course) => void
-  isLoading?: boolean
+  categories: Category[];
+  initialData?: Course;
+  onSubmit: (data: Course) => void;
+  onSuccess?: () => void;
+  isLoading?: boolean;
 }
 
-export function CourseForm({ categories, initialData, onSubmit, isLoading }: CourseFormProps) {
+export function CourseForm({
+  categories,
+  initialData,
+  onSubmit,
+  onSuccess,
+  isLoading,
+}: CourseFormProps) {
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    description: initialData?.description || '',
-    thumbnail: initialData?.thumbnail || '',
-    youtubeUrl: initialData?.youtubeUrl || '',
-    level: initialData?.level || 'Beginner' as const,
-    language: initialData?.language || 'EN',
+    title: initialData?.title || "",
+    description: initialData?.description || "",
+    thumbnail: initialData?.thumbnail || "",
+    youtubeUrl: initialData?.youtubeUrl || "",
+    level: initialData?.level || ("Beginner" as const),
+    language: initialData?.language || "EN",
     categoryIds: initialData?.categoryIds || [],
-  })
+    slug: initialData?.slug || "",
+  });
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(formData.categoryIds)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    formData.categoryIds,
+  );
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleCategoryToggle = (categoryId: string) => {
-    setSelectedCategories(prev =>
-      prev.includes(categoryId) ? prev.filter(id => id !== categoryId) : [...prev, categoryId],
-    )
-  }
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId],
+    );
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit({
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const submitData = {
       id: initialData?.id || Math.random().toString(36).substr(2, 9),
       title: formData.title,
       description: formData.description,
@@ -54,27 +81,36 @@ export function CourseForm({ categories, initialData, onSubmit, isLoading }: Cou
       level: formData.level,
       language: formData.language,
       categoryIds: selectedCategories,
-    })
-    if (!initialData) {
+      slug: formData.slug,
+    };
+
+    await onSubmit(submitData);
+
+    if (onSuccess) {
+      onSuccess();
+    } else if (!initialData) {
       setFormData({
-        title: '',
-        description: '',
-        thumbnail: '',
-        youtubeUrl: '',
-        level: 'Beginner',
-        language: 'EN',
+        title: "",
+        description: "",
+        thumbnail: "",
+        youtubeUrl: "",
+        level: "Beginner",
+        language: "EN",
         categoryIds: [],
-      })
-      setSelectedCategories([])
+        slug: "",
+      });
+      setSelectedCategories([]);
     }
-  }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{initialData ? 'Edit Course' : 'Add New Course'}</CardTitle>
+        <CardTitle>{initialData ? "Edit Course" : "Add New Course"}</CardTitle>
         <CardDescription>
-          {initialData ? 'Update course details' : 'Create a new course from YouTube'}
+          {initialData
+            ? "Update course details"
+            : "Create a new course from YouTube"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -133,7 +169,12 @@ export function CourseForm({ categories, initialData, onSubmit, isLoading }: Cou
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="level">Level</Label>
-              <Select value={formData.level} onValueChange={value => setFormData(prev => ({ ...prev, level: value as any }))}>
+              <Select
+                value={formData.level}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, level: value as any }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -147,7 +188,12 @@ export function CourseForm({ categories, initialData, onSubmit, isLoading }: Cou
 
             <div className="space-y-2">
               <Label htmlFor="language">Language</Label>
-              <Select value={formData.language} onValueChange={value => setFormData(prev => ({ ...prev, language: value }))}>
+              <Select
+                value={formData.language}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, language: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -166,9 +212,11 @@ export function CourseForm({ categories, initialData, onSubmit, isLoading }: Cou
             <Label>Categories</Label>
             <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
               {categories.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No categories available. Create one first.</p>
+                <p className="text-sm text-muted-foreground">
+                  No categories available. Create one first.
+                </p>
               ) : (
-                categories.map(cat => (
+                categories.map((cat) => (
                   <div key={cat.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={cat.id}
@@ -184,11 +232,19 @@ export function CourseForm({ categories, initialData, onSubmit, isLoading }: Cou
             </div>
           </div>
 
-          <Button type="submit" disabled={isLoading || selectedCategories.length === 0} className="w-full">
-            {isLoading ? 'Saving...' : initialData ? 'Update Course' : 'Add Course'}
+          <Button
+            type="submit"
+            disabled={isLoading || selectedCategories.length === 0}
+            className="w-full"
+          >
+            {isLoading
+              ? "Saving..."
+              : initialData
+                ? "Update Course"
+                : "Add Course"}
           </Button>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
