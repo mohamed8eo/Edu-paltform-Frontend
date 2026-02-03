@@ -1,80 +1,140 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
-import { CourseCard } from '@/components/course-card'
-import { CategoryCard } from '@/components/category-card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Search, TrendingUp, Sparkles } from 'lucide-react'
-import { courses, categories } from '@/lib/mock-data'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { CourseCard } from "@/components/course-card";
+import { CategoryCard } from "@/components/category-card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, TrendingUp, Sparkles } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import type { Course } from "@/types/course";
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  image: string;
+  description: string;
+  courseCount: number;
+  icon?: string;
+}
 
 export default function HomePage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await fetch('/api/auth/check')
+        const res = await fetch("/api/auth/check");
         if (res.ok) {
-          setIsAuthenticated(true)
+          setIsAuthenticated(true);
         } else {
-          router.push('/')
+          router.push("/");
         }
       } catch (error) {
-        console.error('Auth check failed:', error)
-        router.push('/')
+        console.error("Auth check failed:", error);
+        router.push("/");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    checkAuth()
-  }, [router])
+    checkAuth();
+  }, [router]);
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch("/api/admin/course/all", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch courses");
+      const data = await response.json();
+      setCourses(data.courses || []);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/categorie/tree", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      const data = await response.json();
+      // Flatten the category tree
+      const flattenCategories = (items: any[]): Category[] => {
+        return items.flatMap((item) => [
+          {
+            id: item.id,
+            name: item.name,
+            slug: item.slug,
+            image: item.image,
+            description: item.description,
+            courseCount: 0,
+          },
+          ...flattenCategories(item.children || []),
+        ]);
+      };
+      setCategories(flattenCategories(data));
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCourses();
+      fetchCategories();
+    }
+  }, [isAuthenticated]);
 
   const filteredCourses = courses.filter((course) => {
-    const matchesSearch = 
+    const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    
-    const matchesCategory = !selectedCategory || course.category === selectedCategory
+      course.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesSearch && matchesCategory
-  })
+    return matchesSearch;
+  });
 
   const handleCategoryClick = (categoryName: string) => {
-    setSelectedCategory(selectedCategory === categoryName ? null : categoryName)
-  }
+    setSelectedCategory(
+      selectedCategory === categoryName ? null : categoryName,
+    );
+  };
 
   const handleEnroll = (courseId: string) => {
-    console.log('[v0] Enrolling in course:', courseId)
+    console.log("[v0] Enrolling in course:", courseId);
     // Add your enrollment logic here
-  }
+  };
 
   const handleSave = (courseId: string) => {
-    console.log('[v0] Saving course:', courseId)
-  }
+    console.log("[v0] Saving course:", courseId);
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Spinner className="w-8 h-8" />
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-background border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -83,9 +143,10 @@ export default function HomePage() {
               Learn Anything, Anytime
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground text-pretty">
-              Access thousands of free YouTube courses, organized and ready for you to master new skills
+              Access thousands of free YouTube courses, organized and ready for
+              you to master new skills
             </p>
-            
+
             {/* Search Bar */}
             <div className="relative max-w-2xl mx-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -105,7 +166,9 @@ export default function HomePage() {
         {/* Categories */}
         <section className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl md:text-3xl font-bold">Browse by Category</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">
+              Browse by Category
+            </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.map((category) => (
@@ -123,7 +186,9 @@ export default function HomePage() {
           <Tabs defaultValue="all" className="w-full">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl md:text-3xl font-bold">
-                {selectedCategory ? `${selectedCategory} Courses` : 'All Courses'}
+                {selectedCategory
+                  ? `${selectedCategory} Courses`
+                  : "All Courses"}
               </h2>
               <TabsList>
                 <TabsTrigger value="all">
@@ -143,8 +208,8 @@ export default function HomePage() {
                   <span className="text-sm text-muted-foreground">
                     Filtering by: <strong>{selectedCategory}</strong>
                   </span>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => setSelectedCategory(null)}
                   >
@@ -152,10 +217,12 @@ export default function HomePage() {
                   </Button>
                 </div>
               )}
-              
+
               {filteredCourses.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No courses found matching your criteria.</p>
+                  <p className="text-muted-foreground">
+                    No courses found matching your criteria.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -173,17 +240,14 @@ export default function HomePage() {
 
             <TabsContent value="trending" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses
-                  .sort((a, b) => b.views - a.views)
-                  .slice(0, 6)
-                  .map((course) => (
-                    <CourseCard
-                      key={course.id}
-                      course={course}
-                      onEnroll={handleEnroll}
-                      onSave={handleSave}
-                    />
-                  ))}
+                {courses.slice(0, 6).map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    onEnroll={handleEnroll}
+                    onSave={handleSave}
+                  />
+                ))}
               </div>
             </TabsContent>
           </Tabs>
@@ -192,5 +256,5 @@ export default function HomePage() {
 
       <Footer />
     </div>
-  )
+  );
 }

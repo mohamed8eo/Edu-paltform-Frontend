@@ -5,9 +5,13 @@ export interface Course {
   description: string;
   thumbnail: string;
   youtubeUrl?: string;
+  youtubePlaylistId?: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   language?: string;
   categoryIds?: string[];
+  isPublished?: boolean;
+  totalDuration?: string;
+  createdAt?: string;
   [key: string]: any;
 }
 
