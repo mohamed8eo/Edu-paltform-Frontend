@@ -17,10 +17,15 @@ import { EndpointTable } from "@/components/endpoint-table";
 import { ErrorStatusCard } from "@/components/error-status-card";
 import { Users, TrendingUp, AlertTriangle, Activity, Zap } from "lucide-react";
 import Link from "next/link";
-import { errorStatuses, dashboardStats } from "@/lib/admin-data";
 import { useUser } from "@/contexts/user-context";
 import { redirect } from "next/navigation";
-import type { DailyTraffic, TrafficData, EndpointTraffic } from "@/types/admin";
+import type {
+  DailyTraffic,
+  TrafficData,
+  EndpointTraffic,
+  ErrorStats,
+  DashboardStats,
+} from "@/types/admin";
 import { authApi } from "../auth-api";
 
 const API_BASE_URL = "/api";
@@ -34,7 +39,10 @@ export default function AdminDashboard() {
   const [slowEndpointsData, setSlowEndpointsData] = useState<EndpointTraffic[]>(
     [],
   );
-  const [totalTraffic, setTotalTraffic] = useState<number>(0);
+  const [errorStatsData, setErrorStatsData] = useState<ErrorStats[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +56,19 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         };
+
+        // Fetch dashboard stats
+        const statsResponse = await fetch(
+          `${API_BASE_URL}/admin/traffic/dashboard-stats`,
+          { method: "GET", headers },
+        );
+        if (!statsResponse.ok) {
+          throw new Error(
+            `Failed to fetch dashboard stats: ${statsResponse.status}`,
+          );
+        }
+        const statsData: DashboardStats = await statsResponse.json();
+        setDashboardStats(statsData);
 
         // Fetch daily traffic
         const trafficResponse = await fetch(
@@ -68,13 +89,6 @@ export default function AdminDashboard() {
           }),
         );
         setTrafficData(transformedTraffic);
-
-        // Calculate total traffic
-        const total = trafficDataRaw.reduce(
-          (sum, item) => sum + parseInt(item.requests, 10),
-          0,
-        );
-        setTotalTraffic(total);
 
         // Fetch top endpoints
         const topResponse = await fetch(
@@ -101,6 +115,19 @@ export default function AdminDashboard() {
         }
         const slowData: EndpointTraffic[] = await slowResponse.json();
         setSlowEndpointsData(slowData);
+
+        // Fetch error stats
+        const errorResponse = await fetch(
+          `${API_BASE_URL}/admin/traffic/error-stats`,
+          { method: "GET", headers },
+        );
+        if (!errorResponse.ok) {
+          throw new Error(
+            `Failed to fetch error stats: ${errorResponse.status}`,
+          );
+        }
+        const errorData: ErrorStats[] = await errorResponse.json();
+        setErrorStatsData(errorData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
         console.error("Error fetching data:", err);
@@ -125,6 +152,11 @@ export default function AdminDashboard() {
   if (user?.role !== "admin") {
     redirect("/home");
   }
+
+  const stats = dashboardStats;
+  const avgResponseTime = stats
+    ? Math.round(parseFloat(stats.averageResponseTime))
+    : 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -154,35 +186,41 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <StatCard
               title="Total Users"
-              value={dashboardStats.totalUsers.toLocaleString()}
+              value={
+                loading ? "..." : stats?.totalUsers.toLocaleString() || "0"
+              }
               description="Registered on platform"
               icon={Users}
               trend={{ value: 12, isPositive: true }}
             />
             <StatCard
               title="Active Users"
-              value={dashboardStats.activeUsers.toLocaleString()}
+              value={
+                loading ? "..." : stats?.activeUsers.toLocaleString() || "0"
+              }
               description="Currently online"
               icon={Activity}
               trend={{ value: 5, isPositive: true }}
             />
             <StatCard
               title="Total Traffic"
-              value={loading ? "..." : totalTraffic.toLocaleString()}
+              value={
+                loading ? "..." : stats?.totalRequests.toLocaleString() || "0"
+              }
               description="API requests"
               icon={TrendingUp}
               trend={{ value: 23, isPositive: true }}
             />
             <StatCard
               title="Error Rate"
-              value={`${dashboardStats.errorRate}%`}
+              value={loading ? "..." : `${stats?.errorRate}%` || "0%"}
               description="HTTP errors"
               icon={AlertTriangle}
               trend={{ value: 2, isPositive: false }}
             />
             <StatCard
               title="Avg Response"
-              value={`${dashboardStats.avgResponseTime}ms`}
+              value={loading ? "..." : `${avgResponseTime}ms`}
               description="API latency"
               icon={Zap}
               trend={{ value: 8, isPositive: false }}
@@ -204,7 +242,7 @@ export default function AdminDashboard() {
                 loading={loading}
               />
             </div>
-            <ErrorStatusCard data={errorStatuses} />
+            <ErrorStatusCard data={errorStatsData} loading={loading} />
           </div>
 
           {/* Slow Endpoints */}

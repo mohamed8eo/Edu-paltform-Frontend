@@ -56,3 +56,27 @@ export interface EndpointTraffic {
   hits: string;
   averageDuration: string;
 }
+
+export interface ErrorStats {
+  statusCode: number;
+  count: string;
+}
+
+export interface AverageResponseTime {
+  averageResponseTime: string;
+}
+
+export interface ErrorRate {
+  totalRequests: number;
+  errorRequests: number;
+  errorRate: string;
+}
+
+export interface DashboardStats {
+  totalRequests: number;
+  errorRequests: number;
+  errorRate: number;
+  averageResponseTime: string;
+  activeUsers: number;
+  totalUsers: number;
+}
