@@ -1,58 +1,94 @@
-"use client"
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Logo } from "@/components/logo"
-import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react"
-import { authApi, tokenManager } from "@/app/auth-api"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Logo } from "@/components/logo";
+import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react";
+import { authApi, tokenManager } from "@/app/auth-api";
 
 export default function SignInPage() {
-  const router = useRouter()
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-  })
+  });
 
   useEffect(() => {
     // Check if user already has a valid token
     if (tokenManager.hasToken()) {
-      router.push("/home")
+      console.log("✅ Token found on mount, redirecting to /home");
+      router.push("/home");
     }
-  }, [router])
+
+    // Check if this is an OAuth redirect (has code or state param)
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasOAuthParams =
+      searchParams.has("code") || searchParams.has("state");
+
+    if (hasOAuthParams) {
+      console.log("🔐 OAuth redirect detected!");
+      console.log("🔍 Search params:", Object.fromEntries(searchParams));
+
+      // Wait a moment for cookies to be set
+      setTimeout(() => {
+        console.log("🍪 Cookies after OAuth redirect:", document.cookie);
+        const token = tokenManager.getToken();
+        console.log(
+          "🔑 Token after redirect:",
+          token ? `${token.substring(0, 20)}...` : "null",
+        );
+
+        if (token) {
+          console.log("✅ Token found after OAuth, redirecting to /home");
+          router.push("/home");
+        } else {
+          console.log("❌ No token found after OAuth redirect");
+        }
+      }, 1000);
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
       await authApi.signIn({
         email: formData.email,
-        password: formData.password
-      })
-      
+        password: formData.password,
+      });
+
       // Token is automatically stored in authApi.signIn
-      router.push("/home")
+      router.push("/home");
     } catch (error) {
-      console.error("Sign in error:", error)
-      alert("Sign in failed. Please check your credentials.")
+      console.error("Sign in error:", error);
+      alert("Sign in failed. Please check your credentials.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSocialSignIn = async (provider: string) => {
-    setIsLoading(true)
+    console.log("🔐 Starting social sign-in with:", provider);
+    setIsLoading(true);
     try {
+      console.log("📡 Calling /auth/sign-in-social...");
       const res = await fetch("http://localhost:8080/auth/sign-in-social", {
         method: "POST",
         headers: {
@@ -60,41 +96,79 @@ export default function SignInPage() {
         },
         credentials: "include",
         body: JSON.stringify({ provider }),
-      })
+      });
+
+      console.log("📥 Response status:", res.status);
+      console.log("🍪 Set-Cookie header:", res.headers.get("set-cookie"));
+      console.log("🌐 Response URL:", res.url);
 
       if (!res.ok) {
-        throw new Error("Failed to initiate social login")
+        const errorText = await res.text();
+        console.error("❌ Social sign-in failed:", errorText);
+        throw new Error("Failed to initiate social login");
       }
 
-      const data = await res.json()
+      // IMPORTANT: Try to get token from response body
+      // Backend should return { token, ... } for non-HttpOnly access
+      let data;
+      try {
+        data = await res.json();
+        console.log("📥 Response data:", data);
+      } catch (e) {
+        data = {};
+        console.log("⚠️ No JSON response body");
+      }
+
+      // If token is in response body, store it in localStorage
+      if (data.token) {
+        console.log(
+          "💾 Token found in response body, storing in localStorage...",
+        );
+        tokenManager.setToken(data.token);
+      } else {
+        console.log(
+          "⚠️ No token in response body - will rely on HttpOnly cookie",
+        );
+      }
+
       if (data.url) {
-        window.location.href = data.url
+        console.log("🔄 Redirecting to:", data.url);
+        window.location.href = data.url;
+      } else {
+        // No redirect URL, check if we have the token
+        if (data.token) {
+          router.push("/home");
+        }
       }
     } catch (error) {
-      console.error("Social sign in error:", error)
+      console.error("❌ Social sign in error:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      
+
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
             <Logo />
           </Link>
           <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-muted-foreground mt-2">Sign in to continue learning</p>
+          <p className="text-muted-foreground mt-2">
+            Sign in to continue learning
+          </p>
         </div>
 
         <Card className="border-none shadow-xl">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl">Sign in</CardTitle>
-            <CardDescription>Choose your preferred sign in method</CardDescription>
+            <CardDescription>
+              Choose your preferred sign in method
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -140,7 +214,9 @@ export default function SignInPage() {
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with email
+                </span>
               </div>
             </div>
 
@@ -155,18 +231,20 @@ export default function SignInPage() {
                     placeholder="you@example.com"
                     className="pl-10"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     required
                     disabled={isLoading}
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link 
-                    href="/forgot-password" 
+                  <Link
+                    href="/forgot-password"
                     className="text-xs text-primary hover:underline"
                   >
                     Forgot password?
@@ -178,7 +256,9 @@ export default function SignInPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
                     required
                     disabled={isLoading}
                   />
@@ -187,7 +267,11 @@ export default function SignInPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -206,7 +290,10 @@ export default function SignInPage() {
 
             <p className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link href="/sign-up" className="text-primary hover:underline font-medium">
+              <Link
+                href="/sign-up"
+                className="text-primary hover:underline font-medium"
+              >
                 Sign up
               </Link>
             </p>
@@ -214,5 +301,5 @@ export default function SignInPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -1,50 +1,134 @@
-'use client'
+"use client";
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { tokenManager } from "@/app/auth-api";
 
-interface AuthContextType {
-  isAuthenticated: boolean
-  lastUsedMethod: string | null
-  loading: boolean
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string | null;
+  role: string;
+  lastLoginMethod: string;
+  banned: boolean;
+  banReason: null | string;
+  banExpires: null | string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  lastUsedMethod: null,
-  loading: true,
-})
+interface UserContextType {
+  user: UserData | null;
+  loading: boolean;
+  error: string | null;
+  refreshUser: () => Promise<void>;
+}
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [lastUsedMethod, setLastUsedMethod] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUser = async () => {
+    try {
+      setError(null);
+      
+      console.log("🔍 Fetching user data...");
+      
+      // Get token (checks cookies first, then localStorage)
+      const token = tokenManager.getToken();
+      
+      if (!token) {
+        console.log("⚠️ No token found, user not authenticated");
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      console.log("✅ Token found, fetching user data");
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+
+      const response = await fetch("/api/me", {
+        credentials: "include",
+        headers,
+      });
+
+      if (!response.ok) {
+        console.log("❌ Failed to fetch user, status:", response.status);
+        setUser(null);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("✅ UserContext: User data loaded:", data);
+      setUser(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch user data");
+      console.error("❌ UserContext: Error fetching user:", err);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshUser = async () => {
+    setLoading(true);
+    await fetchUser();
+  };
 
   useEffect(() => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('better-auth.session_token='))
-    const method = document.cookie.split('; ').find(row => row.startsWith('better-auth.last_used_login_method='))
+    console.log("🚀 UserProvider mounted, fetching user");
+    fetchUser();
 
-    if (token) {
-      setIsAuthenticated(true)
-    }
+    // Refetch user when window gains focus (important for OAuth redirects)
+    const handleFocus = () => {
+      console.log("👀 Window focused, checking for token updates");
+      const hasToken = tokenManager.hasToken();
+      console.log("Has token:", hasToken);
+      
+      // Only refetch if we have a token but no user data
+      if (hasToken && !user) {
+        console.log("🔄 Token exists but no user data, refetching...");
+        fetchUser();
+      }
+    };
 
-    if (method) {
-      setLastUsedMethod(method.split('=')[1])
-    }
+    window.addEventListener("focus", handleFocus);
+    
+    // Also listen for storage changes (in case token is set in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "better-auth.session_token") {
+        console.log("💾 Token changed in localStorage, refetching user");
+        fetchUser();
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
 
-    setLoading(false)
-  }, [])
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, lastUsedMethod, loading }}>
+    <UserContext.Provider value={{ user, loading, error, refreshUser }}>
       {children}
-    </AuthContext.Provider>
-  )
+    </UserContext.Provider>
+  );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+export function useUser() {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error("useUser must be used within a UserProvider");
   }
-  return context
+  return context;
 }
