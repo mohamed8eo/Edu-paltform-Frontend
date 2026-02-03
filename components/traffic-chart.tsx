@@ -1,15 +1,30 @@
-'use client'
+"use client";
 
-import { LineChart, Line, CartesianGrid, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis } from 'recharts'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import type { TrafficData } from '@/types/admin'
+import {
+  LineChart,
+  Line,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { TrafficData } from "@/types/admin";
 
 interface TrafficChartProps {
-  data: TrafficData[]
+  data: TrafficData[];
 }
 
 const CustomTooltip = (props: any) => {
-  const { active, payload, label } = props
+  const { active, payload, label } = props;
 
   if (active && payload && payload.length) {
     return (
@@ -21,32 +36,41 @@ const CustomTooltip = (props: any) => {
           </p>
         ))}
       </div>
-    )
+    );
   }
 
-  return null
-}
+  return null;
+};
 
 export function TrafficChart({ data }: TrafficChartProps) {
+  // Filter out entries with zero traffic to show a proper curve
+  const chartData = data.filter((item) => item.traffic > 0);
+
   return (
     <Card className="col-span-full">
       <CardHeader>
-        <CardTitle>Daily Traffic & Signups</CardTitle>
-        <CardDescription>Website traffic and new user signups over the last 10 days</CardDescription>
+        <CardTitle>Daily Traffic</CardTitle>
+        <CardDescription>API requests over the last few days</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Line type="monotone" dataKey="traffic" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
-            <Line type="monotone" dataKey="signups" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ fill: 'hsl(var(--chart-2))' }} />
+            <Line
+              type="monotone"
+              dataKey="traffic"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2}
+              dot={{ fill: "hsl(var(--primary))" }}
+              activeDot={{ r: 6 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

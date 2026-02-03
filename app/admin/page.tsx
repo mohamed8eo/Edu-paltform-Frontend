@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -16,20 +17,104 @@ import { EndpointTable } from "@/components/endpoint-table";
 import { ErrorStatusCard } from "@/components/error-status-card";
 import { Users, TrendingUp, AlertTriangle, Activity, Zap } from "lucide-react";
 import Link from "next/link";
-import {
-  trafficData,
-  topEndpoints,
-  slowEndpoints,
-  errorStatuses,
-  dashboardStats,
-} from "@/lib/admin-data";
+import { errorStatuses, dashboardStats } from "@/lib/admin-data";
 import { useUser } from "@/contexts/user-context";
 import { redirect } from "next/navigation";
+import type { DailyTraffic, TrafficData, EndpointTraffic } from "@/types/admin";
+import { authApi } from "../auth-api";
+
+const API_BASE_URL = "/api";
 
 export default function AdminDashboard() {
-  const { user, loading } = useUser();
+  const { user, loading: userLoading } = useUser();
+  const [trafficData, setTrafficData] = useState<TrafficData[]>([]);
+  const [topEndpointsData, setTopEndpointsData] = useState<EndpointTraffic[]>(
+    [],
+  );
+  const [slowEndpointsData, setSlowEndpointsData] = useState<EndpointTraffic[]>(
+    [],
+  );
+  const [totalTraffic, setTotalTraffic] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+        const session = await authApi.getSession();
+        const token = session?.user;
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
+
+        // Fetch daily traffic
+        const trafficResponse = await fetch(
+          `${API_BASE_URL}/admin/traffic/daily`,
+          { method: "GET", headers },
+        );
+        if (!trafficResponse.ok) {
+          throw new Error(`Failed to fetch traffic: ${trafficResponse.status}`);
+        }
+        const trafficDataRaw: DailyTraffic[] = await trafficResponse.json();
+
+        // Transform traffic data
+        const transformedTraffic: TrafficData[] = trafficDataRaw.map(
+          (item) => ({
+            date: item.day,
+            traffic: parseInt(item.requests, 10),
+            signups: 0,
+          }),
+        );
+        setTrafficData(transformedTraffic);
+
+        // Calculate total traffic
+        const total = trafficDataRaw.reduce(
+          (sum, item) => sum + parseInt(item.requests, 10),
+          0,
+        );
+        setTotalTraffic(total);
+
+        // Fetch top endpoints
+        const topResponse = await fetch(
+          `${API_BASE_URL}/admin/traffic/top-endpoints`,
+          { method: "GET", headers },
+        );
+        if (!topResponse.ok) {
+          throw new Error(
+            `Failed to fetch top endpoints: ${topResponse.status}`,
+          );
+        }
+        const topData: EndpointTraffic[] = await topResponse.json();
+        setTopEndpointsData(topData);
+
+        // Fetch slow endpoints
+        const slowResponse = await fetch(
+          `${API_BASE_URL}/admin/traffic/slow-endpoints`,
+          { method: "GET", headers },
+        );
+        if (!slowResponse.ok) {
+          throw new Error(
+            `Failed to fetch slow endpoints: ${slowResponse.status}`,
+          );
+        }
+        const slowData: EndpointTraffic[] = await slowResponse.json();
+        setSlowEndpointsData(slowData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.role === "admin") {
+      fetchAllData();
+    }
+  }, [user]);
+
+  if (userLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         Loading...
@@ -83,7 +168,7 @@ export default function AdminDashboard() {
             />
             <StatCard
               title="Total Traffic"
-              value={dashboardStats.totalTraffic.toLocaleString()}
+              value={loading ? "..." : totalTraffic.toLocaleString()}
               description="API requests"
               icon={TrendingUp}
               trend={{ value: 23, isPositive: true }}
@@ -115,7 +200,8 @@ export default function AdminDashboard() {
               <EndpointTable
                 title="Top Used Endpoints"
                 description="Most frequently called API endpoints"
-                data={topEndpoints}
+                data={topEndpointsData}
+                loading={loading}
               />
             </div>
             <ErrorStatusCard data={errorStatuses} />
@@ -126,8 +212,8 @@ export default function AdminDashboard() {
             <EndpointTable
               title="Slowest Endpoints"
               description="Endpoints with highest average response times"
-              data={slowEndpoints}
-              showErrorRate={true}
+              data={slowEndpointsData}
+              loading={loading}
             />
           </div>
 
