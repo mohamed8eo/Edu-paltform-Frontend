@@ -96,8 +96,8 @@ export function ErrorStatusCard({ data, loading }: ErrorStatusCardProps) {
         <CardDescription>Response status codes breakdown</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {displayData.map((status) => (
-          <div key={status.status} className="space-y-2">
+        {displayData.map((status, index) => (
+          <div key={`${status.status}-${index}`} className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">
                 {status.status} - {status.description}

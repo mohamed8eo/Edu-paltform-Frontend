@@ -112,8 +112,10 @@ export function EndpointTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayData.map((endpoint) => (
-              <TableRow key={`${endpoint.endpoint}-${endpoint.method}`}>
+            {displayData.map((endpoint, index) => (
+              <TableRow
+                key={`${endpoint.endpoint}-${endpoint.method}-${index}`}
+              >
                 <TableCell className="font-mono text-sm">
                   {endpoint.endpoint}
                 </TableCell>

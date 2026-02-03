@@ -1,29 +1,33 @@
 # TODO List
 
-## Task: Replace dummy traffic data with API call
+## Completed Tasks
 
-### Step 1: Update types/admin.ts
+### Admin Dashboard (app/admin/page.tsx)
 
-- [x] Add DailyTraffic interface for API response
-- [x] Add ChartTrafficData interface for chart data
+- [x] Created proxy API route for dashboard stats
+- [x] Updated types/admin.ts with DashboardStats interface
+- [x] Replaced dummy data with API calls
 
-### Step 2: Update app/admin/page.tsx
+### Admin Users (app/admin/users/page.tsx)
 
-- [x] Import useState, useEffect from React
-- [x] Add state for traffic data, loading, and error
-- [x] Create fetchTrafficData function
-- [x] Transform API response to chart-compatible format
-- [x] Calculate total traffic from API data
-- [x] Remove import of unused dummy data (trafficData)
-- [x] Update Total Traffic stat card to use dynamic data
+- [x] Created proxy API route for /admin/all-users
+- [x] Created proxy API route for /admin/ban-user/:userId
+- [x] Added status filter (All, Active, Banned)
+- [x] Added pagination with 10 users per page
+- [x] Updated ban/unban actions to use API
 
-### Step 3: Create proxy API route
+### Admin Categories (app/admin/categories/page.tsx)
 
-- [x] Create /app/api/admin/traffic/daily/route.ts
-- [x] Fix server-side cookie handling to avoid localStorage error
+- [x] Created proxy API route for GET /categorie
+- [x] Created proxy API route for POST /categorie
+- [x] Created proxy API route for PUT /categorie/:id
+- [x] Created proxy API route for DELETE /categorie/:id
+- [x] Updated types/course.ts with ApiCategory interface
+- [x] Updated category form to use API category fields
+- [x] Updated categories page to fetch from API
 
-### Step 4: Test the implementation
+## Pending Tasks
 
-- [ ] Verify API call works with cookies
-- [ ] Verify chart displays correctly
-- [ ] Verify total traffic is calculated correctly
+### Admin Courses (app/admin/courses/page.tsx)
+
+- [ ] To be implemented with course API endpoints

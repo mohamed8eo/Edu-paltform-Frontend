@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { courses } from "@/lib/mock-data";
 import { useUser } from "@/contexts/user-context";
+import Image from "next/image";
 
 export default function ProfilePage() {
   const { user, loading, error, refreshUser } = useUser();
@@ -148,29 +149,30 @@ export default function ProfilePage() {
             <Card>
               <CardContent className="p-6 space-y-6">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage
-                      src={user?.image || undefined}
-                      alt={user?.name || "User"}
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        console.error(
-                          "Failed to load avatar image:",
-                          user?.image,
-                        );
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                    <AvatarFallback className="text-2xl">
-                      {user?.name
-                        ? user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()
-                        : "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative h-24 w-24 rounded-full overflow-hidden bg-muted">
+                    {user?.image ? (
+                      <Image
+                        src={user.image}
+                        alt={user.name || "User"}
+                        fill
+                        className="object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-2xl font-semibold">
+                        {user?.name
+                          ? user.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()
+                          : "U"}
+                      </div>
+                    )}
+                  </div>
                   <div>
                     <h2 className="text-2xl font-bold">{user?.name}</h2>
                     <p className="text-muted-foreground text-sm">

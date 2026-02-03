@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,61 +20,95 @@ import {
 import { Input } from "@/components/ui/input";
 import { CourseForm } from "@/components/admin/course-form";
 import { Trash2, Edit2 } from "lucide-react";
-import type { Course, Category } from "@/types/course";
+import type { Course, ApiCategory, CategoryTreeItem } from "@/types/course";
+
+const API_BASE_URL = "/api/admin";
 
 export default function CoursesPage() {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: "1",
-      name: "Web Development",
-      courseCount: 2,
-    },
-    {
-      id: "2",
-      name: "Frontend",
-      courseCount: 1,
-      parentId: "1",
-    },
-    {
-      id: "3",
-      name: "Backend",
-      courseCount: 1,
-      parentId: "1",
-    },
-  ]);
-
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: "1",
-      title: "Complete Frontend Development Bootcamp",
-      description:
-        "Master HTML, CSS, JavaScript, React, TypeScript and modern frontend frameworks",
-      thumbnail: "/placeholder-course-frontend.jpg",
-      youtubeUrl:
-        "https://www.youtube.com/playlist?list=PLDoPjvoNmBAw_t_XWUFbBX-c9MafPk9ji",
-      level: "Beginner",
-      language: "EN",
-      categoryIds: ["2"],
-    },
-    {
-      id: "2",
-      title: "Complete Backend Development Bootcamp",
-      description:
-        "Learn Node.js, Express, Database Design, REST APIs, Authentication",
-      thumbnail: "/placeholder-course-backend.jpg",
-      youtubeUrl:
-        "https://www.youtube.com/playlist?list=PLDoPjvoNmBAw_t_XWUFbBX-c9MafPk9ji",
-      level: "Intermediate",
-      language: "EN",
-      categoryIds: ["3"],
-    },
-  ]);
-
+  const [categories, setCategories] = useState<CategoryTreeItem[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleAddCourse = (data: Course) => {
-    setCourses((prev) => [...prev, data]);
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/categorie/tree", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch("/api/admin/course/all", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch courses");
+      const data = await response.json();
+      setCourses(data.courses || []);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+
+  const flattenCategories = (items: CategoryTreeItem[]): ApiCategory[] => {
+    return items.flatMap((item) => [
+      {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        image: item.image,
+        parentId: item.parentId,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      },
+      ...flattenCategories(item.children),
+    ]);
+  };
+
+  const flatCategories = flattenCategories(categories);
+
+  const getCategoryName = (categoryId: string) => {
+    const category = flatCategories.find((c) => c.id === categoryId);
+    return category?.name || "Unknown";
+  };
+
+  const handleAddCourse = async (data: Course) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/course`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          title: data.title,
+          description: data.description,
+          thumbnail: data.thumbnail,
+          level: data.level,
+          language: data.language,
+          categoryIds: data.categoryIds,
+          youtubePlaylistURL: data.youtubeUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create course");
+      }
+
+      // Refresh the courses list
+      await fetchCourses();
+    } catch (error) {
+      console.error("Error creating course:", error);
+      throw error;
+    }
   };
 
   const handleUpdateCourse = (data: Course) => {
@@ -89,16 +122,18 @@ export default function CoursesPage() {
     setCourses((prev) => prev.filter((course) => course.id !== id));
   };
 
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.name || "Unknown";
-  };
-
   const filteredCourses = courses.filter(
     (course) =>
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      (course.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (course.description?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase(),
+      ),
   );
+
+  useEffect(() => {
+    fetchCategories();
+    fetchCourses();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -116,7 +151,7 @@ export default function CoursesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <CourseForm
-            categories={categories}
+            categories={flatCategories}
             initialData={editingCourse || undefined}
             onSubmit={editingCourse ? handleUpdateCourse : handleAddCourse}
           />
@@ -166,7 +201,7 @@ export default function CoursesPage() {
                             <span className="px-2 py-1 bg-muted rounded">
                               {course.language}
                             </span>
-                            {course.categoryIds.map((catId) => (
+                            {course.categoryIds?.map((catId) => (
                               <span
                                 key={catId}
                                 className="px-2 py-1 bg-primary/10 text-primary rounded"
