@@ -30,14 +30,6 @@ export interface ActiveUser {
   joinDate: string;
 }
 
-export interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
-  totalTraffic: number;
-  errorRate: number;
-  avgResponseTime: number;
-}
-
 export interface DailyTraffic {
   day: string;
   requests: string;
@@ -79,4 +71,25 @@ export interface DashboardStats {
   averageResponseTime: string;
   activeUsers: number;
   totalUsers: number;
+}
+
+export interface ApiUser {
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginMethod: string;
+  role: string;
+  banned: boolean;
+  banReason: string | null;
+  banExpires: string | null;
+  id: string;
+}
+
+export interface UsersResponse {
+  users: ApiUser[];
+  total: number;
+  limit: number;
 }

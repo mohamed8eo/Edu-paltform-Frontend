@@ -256,7 +256,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>Common admin tasks</CardDescription>
@@ -292,7 +292,7 @@ export default function AdminDashboard() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </main>
 
