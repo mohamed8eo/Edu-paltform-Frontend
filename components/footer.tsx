@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { Github, Linkedin, Twitter } from "lucide-react"
-import { Logo } from "@/components/logo"
+import Link from "next/link";
+import { Github, Linkedin, Twitter } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 export function Footer() {
   return (
@@ -10,7 +10,8 @@ export function Footer() {
           <div>
             <Logo className="mb-4" />
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Free education for everyone. Learn new skills and advance your career with our expert-led courses.
+              Free education for everyone. Learn new skills and advance your
+              career with our expert-led courses.
             </p>
             <p className="text-sm text-muted-foreground mt-4">
               2025 LearnHub. All rights reserved.
@@ -21,22 +22,34 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="#about" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/about"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="#features" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/features"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   Features
                 </Link>
               </li>
               <li>
-                <Link href="#courses" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/courses"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   Courses
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/contact"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   Contact
                 </Link>
               </li>
@@ -78,5 +91,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

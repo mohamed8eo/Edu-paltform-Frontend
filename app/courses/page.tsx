@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CourseCard } from "@/components/course-card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -47,6 +47,9 @@ export default function AllCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [categoryTree, setCategoryTree] = useState<CategoryTree[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [openSubCategories, setOpenSubCategories] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     fetchCategoryTree();
@@ -77,6 +80,24 @@ export default function AllCoursesPage() {
   // Filter only published courses
   const filterPublishedCourses = (courses: CourseInCategory[]) => {
     return courses.filter((course) => course.isPublished);
+  };
+
+  // Toggle subcategory open/close
+  const toggleSubCategory = (subCategoryId: string) => {
+    setOpenSubCategories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(subCategoryId)) {
+        newSet.delete(subCategoryId);
+      } else {
+        newSet.add(subCategoryId);
+      }
+      return newSet;
+    });
+  };
+
+  // Check if subcategory is open
+  const isSubCategoryOpen = (subCategoryId: string) => {
+    return openSubCategories.has(subCategoryId);
   };
 
   if (loading) {
@@ -139,67 +160,77 @@ export default function AllCoursesPage() {
                 </div>
 
                 {/* Subcategories */}
-                <div className="space-y-8 pl-4">
+                <div className="space-y-4 pl-4">
                   {parentCategory.children &&
                     parentCategory.children.map((subCategory) => {
                       const publishedCourses = filterPublishedCourses(
                         subCategory.courses,
                       );
-                      const displayCourses = publishedCourses.slice(0, 3);
+                      const isOpen = isSubCategoryOpen(subCategory.id);
                       const hasMoreCourses = publishedCourses.length > 3;
 
                       if (publishedCourses.length === 0) return null;
 
                       return (
-                        <div
-                          key={subCategory.id}
-                          className="space-y-4 border-l-2 border-muted pl-6"
-                        >
-                          {/* Subcategory Header */}
-                          <div className="flex items-center justify-between">
+                        <div key={subCategory.id} className="border rounded-lg">
+                          {/* Subcategory Header - Clickable to toggle */}
+                          <button
+                            onClick={() => toggleSubCategory(subCategory.id)}
+                            className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                          >
                             <div className="flex items-center gap-2">
-                              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                              <h3 className="text-xl font-semibold">
+                              {isOpen ? (
+                                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                              )}
+                              <h3 className="text-lg font-semibold">
                                 {subCategory.name}
                               </h3>
+                              <span className="text-sm text-muted-foreground">
+                                ({publishedCourses.length} courses)
+                              </span>
                             </div>
                             {hasMoreCourses && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() =>
-                                  router.push(`/category/${subCategory.slug}`)
-                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/category/${subCategory.slug}`);
+                                }}
                                 className="gap-1"
                               >
                                 Show More
                                 <ChevronRight className="w-4 h-4" />
                               </Button>
                             )}
-                          </div>
+                          </button>
 
-                          {/* Courses Grid */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {displayCourses.map((course) => (
-                              <CourseCard
-                                key={course.id}
-                                course={{
-                                  id: course.id,
-                                  slug: course.slug,
-                                  title: course.title,
-                                  description: "",
-                                  thumbnail: course.thumbnail,
-                                  youtubeUrl: "",
-                                  categoryIds: [],
-                                  level: course.level,
-                                  language: course.language,
-                                  publishedAt: "",
-                                }}
-                                onEnroll={(id) => console.log("Enroll:", id)}
-                                onSave={(id) => console.log("Save:", id)}
-                              />
-                            ))}
-                          </div>
+                          {/* Courses Grid - Collapsible */}
+                          {isOpen && (
+                            <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {publishedCourses.map((course) => (
+                                <CourseCard
+                                  key={course.id}
+                                  course={{
+                                    id: course.id,
+                                    slug: course.slug,
+                                    title: course.title,
+                                    description: "",
+                                    thumbnail: course.thumbnail,
+                                    youtubeUrl: "",
+                                    categoryIds: [],
+                                    level: course.level,
+                                    language: course.language,
+                                    publishedAt: "",
+                                  }}
+                                  onEnroll={(id) => console.log("Enroll:", id)}
+                                  onSave={(id) => console.log("Save:", id)}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
