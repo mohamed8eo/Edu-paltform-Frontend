@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import type { Course } from "@/types/course";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,10 +15,13 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
+  // Use slug for navigation, fallback to id if slug is not available
+  const courseSlug = course.slug || course.id;
+
   return (
     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 bg-card border-0 ring-1 ring-border/50 hover:ring-primary/50">
       {/* Image Container */}
-      <Link href={`/courses/${course.slug}`} className="relative block">
+      <Link href={`/courses/${courseSlug}`} className="relative block">
         <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
           <Image
             src={course.thumbnail || "/placeholder-course.jpg"}
@@ -33,14 +36,6 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
 
           {/* Bottom Info */}
           <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between">
-            {/* Duration */}
-            {course.totalDuration && (
-              <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-md text-xs font-medium">
-                <Clock className="w-3 h-3" />
-                {course.totalDuration}
-              </div>
-            )}
-
             {/* Level Badge */}
             <Badge className="bg-primary/90 backdrop-blur-sm hover:bg-primary">
               {course.level}
@@ -68,7 +63,7 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
         </Badge>
 
         {/* Title */}
-        <Link href={`/courses/${course.slug}`}>
+        <Link href={`/courses/${courseSlug}`}>
           <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-snug">
             {course.title}
           </h3>

@@ -1,30 +1,34 @@
-'use client'
+"use client";
 
-import Image from 'next/image'
-import { Play, Clock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import type { Lesson } from '@/types/course'
+import Image from "next/image";
+import { Play, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { Lesson } from "@/types/course";
 
 interface LessonCardProps {
-  lesson: Lesson
-  isActive?: boolean
-  onSelect?: (lesson: Lesson) => void
+  lesson: Lesson;
+  isActive?: boolean;
+  onSelect?: (lesson: Lesson) => void;
 }
 
-export function LessonCard({ lesson, isActive = false, onSelect }: LessonCardProps) {
+export function LessonCard({
+  lesson,
+  isActive = false,
+  onSelect,
+}: LessonCardProps) {
   return (
     <div
       className={`flex gap-4 p-3 rounded-lg border cursor-pointer transition-all ${
         isActive
-          ? 'border-primary bg-primary/10'
-          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+          ? "border-primary bg-primary/10"
+          : "border-border hover:border-primary/50 hover:bg-muted/50"
       }`}
       onClick={() => onSelect?.(lesson)}
     >
       {/* Thumbnail */}
       <div className="relative w-24 h-16 flex-shrink-0 rounded-md overflow-hidden bg-muted">
         <Image
-          src={lesson.thumbnail || '/placeholder-course-1.jpg'}
+          src={lesson.thumbnail || "/placeholder-course-1.jpg"}
           alt={lesson.title}
           fill
           className="object-cover"
@@ -43,12 +47,7 @@ export function LessonCard({ lesson, isActive = false, onSelect }: LessonCardPro
           <Clock className="w-3 h-3" />
           <span>{lesson.duration}</span>
         </div>
-        {lesson.description && (
-          <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
-            {lesson.description}
-          </p>
-        )}
       </div>
     </div>
-  )
+  );
 }
