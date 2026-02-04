@@ -26,8 +26,14 @@ import {
   Loader2,
   ChevronDown,
   ChevronRight,
+  Folder,
+  FolderOpen,
+  Plus,
+  Search,
+  LayoutGrid,
 } from "lucide-react";
 import type { CategoryTreeItem, ApiCategory } from "@/types/course";
+import { Badge } from "@/components/ui/badge";
 
 const API_BASE_URL = "/api";
 
@@ -180,52 +186,117 @@ export default function CategoriesPage() {
   const totalCategories = countAllCategories(categories);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Category Management
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Create and organize categories. Sub-categories inherit from parent
-            categories.
-          </p>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+        
+        <div className="relative p-8">
+          <div className="flex items-start justify-between">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-xl border border-primary/20 shadow-lg">
+                <LayoutGrid className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  Content Organization
+                </span>
+              </div>
+              
+              <h1 className="text-4xl font-bold tracking-tight">
+                <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
+                  Category Management
+                </span>
+              </h1>
+              
+              <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
+                Create and organize categories. Sub-categories inherit from parent
+                categories and create a hierarchical structure.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 mb-2">
+                  <span className="text-2xl font-bold text-primary">
+                    {loading ? "..." : totalCategories}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground font-medium">Total Categories</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Category Form - Left Sidebar */}
         <div className="lg:col-span-1">
-          <CategoryForm
-            categories={flatCategories}
-            initialData={editingCategory || undefined}
-            onSubmit={
-              editingCategory ? handleUpdateCategory : handleAddCategory
-            }
-            isLoading={submitting}
-          />
+          <div className="sticky top-6">
+            <CategoryForm
+              categories={flatCategories}
+              initialData={editingCategory || undefined}
+              onSubmit={
+                editingCategory ? handleUpdateCategory : handleAddCategory
+              }
+              isLoading={submitting}
+            />
+          </div>
         </div>
 
+        {/* Categories List - Main Content */}
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Categories ({loading ? "..." : totalCategories})
-              </CardTitle>
-              <CardDescription>
-                Manage your course categories and sub-categories
-              </CardDescription>
+          <Card className="border-0 shadow-xl bg-card/50 backdrop-blur-sm">
+            <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <Folder className="w-6 h-6 text-primary" />
+                    <span>Categories</span>
+                    <Badge variant="secondary" className="ml-2">
+                      {loading ? "..." : totalCategories}
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Manage your course categories and sub-categories hierarchy
+                  </CardDescription>
+                </div>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => {
+                    setExpandedParents(new Set(flatCategories.map(c => c.id)));
+                  }}
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  Expand All
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent>
+
+            <CardContent className="p-6">
               {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="relative w-16 h-16 mb-4">
+                    <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin"></div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Loading categories...</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {categories.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4">
-                      No categories yet. Create one to get started.
-                    </p>
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                        <Folder className="w-10 h-10 text-primary/50" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2">No categories yet</h3>
+                      <p className="text-sm text-muted-foreground max-w-sm">
+                        Get started by creating your first category using the form on the left.
+                      </p>
+                    </div>
                   ) : (
                     <div className="space-y-2">
                       {categories.map((category) => (
@@ -271,17 +342,33 @@ function CategoryItem({
   const isExpanded = expandedParents.has(category.id);
   const hasChildren = category.children.length > 0;
 
+  // Color gradient based on level
+  const levelColors = [
+    "border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/5",
+    "border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/5",
+    "border-green-500/30 hover:border-green-500/50 hover:bg-green-500/5",
+    "border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500/5",
+  ];
+
+  const levelColor = levelColors[level % levelColors.length];
+
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <div
-        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition"
-        style={{ marginLeft: `${level * 16}px` }}
+        className={`group relative flex items-center justify-between p-4 border-2 rounded-xl transition-all duration-300 hover:shadow-lg ${levelColor} bg-card/50 backdrop-blur-sm`}
+        style={{ marginLeft: `${level * 24}px` }}
       >
-        <div className="flex items-center gap-2 flex-1">
+        {/* Connector line for nested items */}
+        {level > 0 && (
+          <div className="absolute -left-3 top-1/2 w-3 h-px bg-border" />
+        )}
+
+        <div className="flex items-center gap-3 flex-1">
+          {/* Expand/Collapse Button */}
           {hasChildren ? (
             <button
               onClick={() => onToggleExpanded(category.id)}
-              className="text-muted-foreground hover:text-foreground"
+              className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 hover:scale-110"
             >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
@@ -290,16 +377,38 @@ function CategoryItem({
               )}
             </button>
           ) : (
-            <div className="w-5" />
+            <div className="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+            </div>
           )}
-          <div className="flex-1">
-            <p className="font-medium">{category.name}</p>
-            <p className="text-xs text-muted-foreground truncate">
+
+          {/* Category Icon */}
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 group-hover:scale-105 transition-transform duration-200">
+            {hasChildren ? (
+              <FolderOpen className="w-6 h-6 text-primary" />
+            ) : (
+              <Folder className="w-6 h-6 text-primary" />
+            )}
+          </div>
+
+          {/* Category Details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="font-semibold text-base truncate">{category.name}</p>
+              {hasChildren && (
+                <Badge variant="secondary" className="text-xs">
+                  {category.children.length}
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground truncate">
               {category.description}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Button
             variant="ghost"
             size="sm"
@@ -314,34 +423,46 @@ function CategoryItem({
                 updatedAt: category.createdAt,
               })
             }
+            className="h-9 w-9 p-0 hover:bg-blue-500/10 hover:text-blue-500"
           >
             <Edit2 className="w-4 h-4" />
           </Button>
+          
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-destructive hover:bg-destructive/10"
+                className="h-9 w-9 p-0 text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogTitle>Delete Category</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure? This will delete "{category.name}"{" "}
-                {hasChildren &&
-                  `and its ${category.children.length} sub-category(ies)`}
-                .
-              </AlertDialogDescription>
-              <div className="flex gap-3 justify-end">
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogContent className="border-2">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-xl">
+                  <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-destructive" />
+                  </div>
+                  Delete Category
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-base pt-2">
+                  Are you sure you want to delete{" "}
+                  <span className="font-semibold text-foreground">"{category.name}"</span>?
+                  {hasChildren && (
+                    <span className="block mt-2 text-destructive">
+                      ⚠️ This will also delete {category.children.length} sub-category(ies).
+                    </span>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex gap-3 justify-end mt-4">
+                <AlertDialogCancel className="border-2">Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => onDelete(category.id)}
-                  className="bg-destructive hover:bg-destructive/90"
+                  className="bg-destructive hover:bg-destructive/90 shadow-lg"
                 >
-                  Delete
+                  Delete Category
                 </AlertDialogAction>
               </div>
             </AlertDialogContent>
@@ -349,19 +470,22 @@ function CategoryItem({
         </div>
       </div>
 
-      {isExpanded &&
-        hasChildren &&
-        category.children.map((child) => (
-          <CategoryItem
-            key={child.id}
-            category={child}
-            level={level + 1}
-            expandedParents={expandedParents}
-            onToggleExpanded={onToggleExpanded}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
+      {/* Render children with animation */}
+      {isExpanded && hasChildren && (
+        <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+          {category.children.map((child) => (
+            <CategoryItem
+              key={child.id}
+              category={child}
+              level={level + 1}
+              expandedParents={expandedParents}
+              onToggleExpanded={onToggleExpanded}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,8 @@
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { ServicesSection } from "@/components/services-section";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   BookOpen,
   Video,
@@ -16,6 +17,9 @@ import {
   Download,
   Infinity,
   TrendingUp,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 
 const features = [
@@ -99,64 +103,91 @@ const benefits = [
     description:
       "No hidden costs, no subscriptions, no catch. Everything is completely free forever.",
     icon: Infinity,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
   },
   {
     title: "Expert-Led",
     description:
       "Learn from industry professionals with years of real-world experience.",
     icon: Award,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
   },
   {
     title: "Beginner Friendly",
     description:
       "Start from zero. Our courses assume no prior knowledge and build up gradually.",
     icon: TrendingUp,
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
   },
   {
     title: "Practical Skills",
     description:
       "Focus on skills you can use immediately in your career or projects.",
     icon: Zap,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+  },
+];
+
+const steps = [
+  {
+    step: "01",
+    title: "Browse Courses",
+    description:
+      "Explore our catalog of free courses and find the perfect course for your learning goals.",
+    icon: BookOpen,
+  },
+  {
+    step: "02",
+    title: "Start Learning",
+    description:
+      "Enroll with a single click and start watching video lessons, reading materials, and practicing skills.",
+    icon: Video,
+  },
+  {
+    step: "03",
+    title: "Get Certified",
+    description:
+      "Complete the course, earn your certificate, and showcase your new skills to the world.",
+    icon: Award,
   },
 ];
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
-        </div>
-
-        {/* Animated Orbs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      <section className="relative overflow-hidden border-b">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background" />
+        <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+        
+        {/* Floating orbs */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20">
-              <Zap className="w-5 h-5 text-primary" />
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm">
+              <Zap className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium">Why Choose Us</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              Everything You Need to{" "}
-              <span className="text-primary">Succeed</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
-              We provide all the tools and resources you need to master new
-              skills and achieve your learning goals - completely free.
-            </p>
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight">
+                Everything You Need
+                <span className="block bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mt-2">
+                  To Succeed
+                </span>
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                We provide all the tools and resources you need to master new skills and achieve your learning goals - completely free.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -164,21 +195,26 @@ export default function FeaturesPage() {
       {/* Benefits Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => (
               <div
                 key={index}
-                className="group p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg"
+                className="group relative p-8 rounded-2xl bg-card border hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-2"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-primary/20">
-                    <benefit.icon className="h-5 w-5 text-primary" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative space-y-4">
+                  <div className={`w-14 h-14 rounded-xl ${benefit.bgColor} ${benefit.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <benefit.icon className="h-7 w-7" />
                   </div>
-                  <h3 className="font-semibold">{benefit.title}</h3>
+                  <div>
+                    <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-colors">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {benefit.description}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {benefit.description}
-                </p>
               </div>
             ))}
           </div>
@@ -189,12 +225,15 @@ export default function FeaturesPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Feature Overview</span>
+            </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Powerful Features
+              Powerful Features for Your Success
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Discover all the features that make LearnHub the best choice for
-              your online learning journey.
+              Discover all the features that make our platform the best choice for your online learning journey
             </p>
           </div>
 
@@ -202,17 +241,18 @@ export default function FeaturesPage() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group p-6 rounded-2xl bg-card border hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                className="group relative p-8 rounded-2xl bg-card border hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-2"
               >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-110">
-                    <feature.icon className="h-6 w-6" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative space-y-4">
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 text-primary group-hover:bg-gradient-to-br group-hover:from-primary group-hover:to-primary/70 group-hover:text-primary-foreground flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg shadow-primary/0 group-hover:shadow-primary/25">
+                    <feature.icon className="h-7 w-7" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                    <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
+                    <p className="text-muted-foreground leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -225,49 +265,102 @@ export default function FeaturesPage() {
 
       {/* How It Works */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto max-w-5xl">
+        <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               How It Works
             </h2>
-            <p className="text-muted-foreground text-lg">
-              Getting started is easy. Follow these simple steps to begin your
-              learning journey.
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Getting started is easy. Follow these simple steps to begin your learning journey
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "01",
-                title: "Browse Courses",
-                description:
-                  "Explore our catalog of free courses and find the perfect course for your learning goals.",
-              },
-              {
-                step: "02",
-                title: "Start Learning",
-                description:
-                  "Enroll with a single click and start watching video lessons, reading materials, and practicing skills.",
-              },
-              {
-                step: "03",
-                title: "Get Certified",
-                description:
-                  "Complete the course, earn your certificate, and showcase your new skills to the world.",
-              },
-            ].map((item, index) => (
-              <div key={index} className="relative text-center">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold">
-                  {item.step}
+            {steps.map((item, index) => (
+              <div key={index} className="relative">
+                <div className="text-center space-y-6">
+                  {/* Step number badge */}
+                  <div className="relative inline-flex">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center text-3xl font-bold shadow-2xl shadow-primary/25">
+                      {item.step}
+                    </div>
+                    {/* Connector line */}
+                    {index < steps.length - 1 && (
+                      <div className="hidden md:block absolute top-10 left-full w-full h-0.5">
+                        <div className="w-full h-full bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Icon */}
+                  <div className="w-16 h-16 mx-auto rounded-xl bg-primary/10 flex items-center justify-center">
+                    <item.icon className="w-8 h-8 text-primary" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {item.description}
+              </div>
+            ))}
+          </div>
+
+          {/* Additional info */}
+          <div className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Ready to Get Started?</h3>
+                  <p className="text-muted-foreground">
+                    Join thousands of learners and start your journey today
+                  </p>
+                </div>
+              </div>
+              <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl group flex-shrink-0">
+                Browse Courses
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Trusted by Learners Worldwide
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Join our growing community of successful students
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { number: "50+", label: "Free Courses" },
+              { number: "10K+", label: "Active Students" },
+              { number: "100+", label: "Expert Instructors" },
+              { number: "95%", label: "Success Rate" },
+            ].map((stat, index) => (
+              <div
+                key={index}
+                className="text-center p-8 rounded-2xl bg-card border hover:border-primary/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              >
+                <p className="text-4xl md:text-5xl font-bold text-primary mb-2">
+                  {stat.number}
                 </p>
-                {index < 2 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/30 to-primary/30" />
-                )}
+                <p className="text-muted-foreground font-medium">
+                  {stat.label}
+                </p>
               </div>
             ))}
           </div>
@@ -275,31 +368,33 @@ export default function FeaturesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="container mx-auto max-w-4xl">
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-5xl">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20">
             <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
-            <div className="relative px-8 py-12 md:py-16 text-center space-y-6">
-              <h2 className="text-2xl md:text-3xl font-bold">
-                Ready to Explore Our Features?
-              </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Start learning today and discover why thousands of students
-                trust LearnHub for their education.
-              </p>
+            <div className="absolute top-10 right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+            
+            <div className="relative px-8 py-16 md:py-20 text-center space-y-8">
+              <div className="space-y-4">
+                <Badge variant="secondary" className="text-sm">
+                  Start Learning Today
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  Ready to Explore Our Features?
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                  Start learning today and discover why thousands of students trust our platform for their education
+                </p>
+              </div>
+              
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
-                  href="/courses"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Browse Courses
-                </a>
-                <a
-                  href="/about"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-input bg-background font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  Learn More
-                </a>
+                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl group">
+                  Browse All Courses
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button size="lg" variant="outline" className="gap-2">
+                  Learn More About Us
+                </Button>
               </div>
             </div>
           </div>

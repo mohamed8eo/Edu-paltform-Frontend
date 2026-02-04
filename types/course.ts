@@ -65,3 +65,109 @@ export interface UserProfile {
   savedCourses: string[];
   joinedAt: string;
 }
+
+// API Category Type Definition
+// This represents the category structure used in API requests and responses
+
+export interface ApiCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Category Tree Item (for hierarchical display)
+// Used when fetching the category tree structure
+export interface CategoryTreeItem {
+  id: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  parentId: string | null;
+  createdAt: string;
+  children: CategoryTreeItem[];
+}
+
+// Optional: Category Create/Update DTO (Data Transfer Object)
+// Use this for API requests when creating or updating categories
+export interface CategoryCreateDto {
+  name: string;
+  description: string;
+  image?: string | null;
+  parentId?: string | null;
+}
+
+export interface CategoryUpdateDto {
+  name?: string;
+  description?: string;
+  image?: string | null;
+  parentId?: string | null;
+}
+
+// Optional: Category Response (if your API returns additional metadata)
+export interface CategoryResponse {
+  success: boolean;
+  data: ApiCategory;
+  message?: string;
+}
+
+export interface CategoryListResponse {
+  success: boolean;
+  data: ApiCategory[];
+  message?: string;
+}//API Category Type Definition
+// This represents the category structure used in API requests and responses
+
+export interface ApiCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Category Tree Item (for hierarchical display)
+// Used when fetching the category tree structure
+export interface CategoryTreeItem {
+  id: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  parentId: string | null;
+  createdAt: string;
+  children: CategoryTreeItem[];
+}
+
+// Optional: Category Create/Update DTO (Data Transfer Object)
+// Use this for API requests when creating or updating categories
+export interface CategoryCreateDto {
+  name: string;
+  description: string;
+  image?: string | null;
+  parentId?: string | null;
+}
+
+export interface CategoryUpdateDto {
+  name?: string;
+  description?: string;
+  image?: string | null;
+  parentId?: string | null;
+}
+
+// Optional: Category Response (if your API returns additional metadata)
+export interface CategoryResponse {
+  success: boolean;
+  data: ApiCategory;
+  message?: string;
+}
+
+export interface CategoryListResponse {
+  success: boolean;
+  data: ApiCategory[];
+  message?: string;
+}
