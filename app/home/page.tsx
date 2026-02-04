@@ -8,8 +8,7 @@ import { CourseCard } from "@/components/course-card";
 import { CategoryCard } from "@/components/category-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, TrendingUp, Sparkles } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import type { Course } from "@/types/course";
 
@@ -166,45 +165,28 @@ export default function HomePage() {
 
         {/* Courses */}
         <section className="space-y-6">
-          <Tabs defaultValue="all" className="w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold">All Courses</h2>
-              <TabsList>
-                <TabsTrigger value="all">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  All
-                </TabsTrigger>
-                <TabsTrigger value="trending">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Trending
-                </TabsTrigger>
-              </TabsList>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl md:text-3xl font-bold">All Courses</h2>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/courses")}
+              className="gap-2"
+            >
+              View All Courses
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {filteredCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                No courses found matching your criteria.
+              </p>
             </div>
-
-            <TabsContent value="all" className="space-y-6">
-              {filteredCourses.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    No courses found matching your criteria.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredCourses.map((course) => (
-                    <CourseCard
-                      key={course.id}
-                      course={course}
-                      onEnroll={handleEnroll}
-                      onSave={handleSave}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="trending" className="space-y-6">
+          ) : (
+            <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses.slice(0, 6).map((course) => (
+                {filteredCourses.slice(0, 5).map((course) => (
                   <CourseCard
                     key={course.id}
                     course={course}
@@ -213,8 +195,21 @@ export default function HomePage() {
                   />
                 ))}
               </div>
-            </TabsContent>
-          </Tabs>
+              {filteredCourses.length > 5 && (
+                <div className="flex justify-center mt-8">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => router.push("/courses")}
+                    className="gap-2"
+                  >
+                    Show More Courses
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </section>
       </main>
 

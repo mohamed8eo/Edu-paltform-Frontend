@@ -27,6 +27,7 @@ export interface Course {
   rating?: number;
   tags?: string[];
   publishedAt?: string;
+  isPublished?: boolean;
   lessons?: Lesson[];
 }
 
@@ -40,6 +41,17 @@ export interface Category {
   description?: string;
   parentId?: string | null;
   children?: Category[];
+  courses?: CourseInCategory[];
+}
+
+export interface CourseInCategory {
+  id: string;
+  title: string;
+  slug: string;
+  thumbnail: string;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  language: string;
+  isPublished: boolean;
 }
 
 export interface UserProfile {

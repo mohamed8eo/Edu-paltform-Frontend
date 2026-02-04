@@ -10,7 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import type { Course } from "@/types/course";
+import type { CourseInCategory } from "@/types/course";
 
 interface CategoryItem {
   id: string;
@@ -21,7 +21,7 @@ interface CategoryItem {
   parentId: string | null;
   createdAt: string;
   children: CategoryItem[];
-  courses: Course[];
+  courses: CourseInCategory[];
 }
 
 export default function CategoryPage() {
@@ -120,7 +120,9 @@ export default function CategoryPage() {
   }
 
   // Get courses only from current category (not children)
-  const currentCourses = currentCategory?.courses || [];
+  // Filter to show only published courses
+  const currentCourses =
+    currentCategory?.courses?.filter((course) => course.isPublished) || [];
 
   return (
     <div className="min-h-screen">
@@ -185,7 +187,19 @@ export default function CategoryPage() {
               {currentCourses.map((course) => (
                 <CourseCard
                   key={course.id}
-                  course={course}
+                  course={{
+                    id: course.id,
+                    slug: course.slug,
+                    title: course.title,
+                    description: "",
+                    thumbnail: course.thumbnail,
+                    youtubeUrl: "",
+                    categoryIds: [],
+                    level: course.level,
+                    language: course.language,
+                    publishedAt: "",
+                    isPublished: course.isPublished,
+                  }}
                   onEnroll={() => console.log("Enroll:", course.id)}
                   onSave={() => console.log("Save:", course.id)}
                 />
