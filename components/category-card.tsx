@@ -1,42 +1,42 @@
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card'
-import type { Category } from '@/types/course'
-import { Code, Smartphone, BarChart, Palette, TrendingUp, Briefcase, type LucideIcon } from 'lucide-react'
+import { Card } from "@/components/ui/card";
+import Image from "next/image";
+import Link from "next/link";
 
 interface CategoryCardProps {
-  category: Category
-  onClick?: () => void
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    image: string;
+    description?: string;
+  };
 }
 
-const iconMap: Record<string, LucideIcon> = {
-  Code,
-  Smartphone,
-  BarChart,
-  Palette,
-  TrendingUp,
-  Briefcase,
-}
-
-export function CategoryCard({ category, onClick }: CategoryCardProps) {
-  const Icon = iconMap[category.icon] || Code
-
+export function CategoryCard({ category }: CategoryCardProps) {
   return (
-    <Card 
-      className="cursor-pointer hover:shadow-lg hover:border-primary transition-all"
-      onClick={onClick}
-    >
-      <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <Icon className="h-6 w-6 text-primary" />
+    <Link href={`/category/${category.slug}`}>
+      <Card className="group overflow-hidden relative h-48 cursor-pointer hover:shadow-xl transition-all duration-300">
+        <Image
+          src={category.image || "/placeholder.jpg"}
+          alt={category.name}
+          fill
+          className="object-cover transition-all duration-500 group-hover:scale-110"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <h3 className="font-bold text-lg text-white group-hover:text-primary transition-colors">
+            {category.name}
+          </h3>
+          {category.description && (
+            <p className="text-sm text-gray-200 line-clamp-1">
+              {category.description}
+            </p>
+          )}
         </div>
-        <div>
-          <h3 className="font-semibold text-lg">{category.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            {category.courseCount} courses
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  )
+      </Card>
+    </Link>
+  );
 }

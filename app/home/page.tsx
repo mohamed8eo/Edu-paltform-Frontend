@@ -19,8 +19,7 @@ interface Category {
   slug: string;
   image: string;
   description: string;
-  courseCount: number;
-  icon?: string;
+  parentId: string | null;
 }
 
 export default function HomePage() {
@@ -30,7 +29,6 @@ export default function HomePage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -73,21 +71,16 @@ export default function HomePage() {
       });
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
-      // Flatten the category tree
-      const flattenCategories = (items: any[]): Category[] => {
-        return items.flatMap((item) => [
-          {
-            id: item.id,
-            name: item.name,
-            slug: item.slug,
-            image: item.image,
-            description: item.description,
-            courseCount: 0,
-          },
-          ...flattenCategories(item.children || []),
-        ]);
-      };
-      setCategories(flattenCategories(data));
+      // Get only parent categories (those with parentId === null)
+      const parentCategories: Category[] = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        image: item.image,
+        description: item.description,
+        parentId: item.parentId,
+      }));
+      setCategories(parentCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -107,12 +100,6 @@ export default function HomePage() {
 
     return matchesSearch;
   });
-
-  const handleCategoryClick = (categoryName: string) => {
-    setSelectedCategory(
-      selectedCategory === categoryName ? null : categoryName,
-    );
-  };
 
   const handleEnroll = (courseId: string) => {
     console.log("[v0] Enrolling in course:", courseId);
@@ -170,13 +157,9 @@ export default function HomePage() {
               Browse by Category
             </h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {categories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                onClick={() => handleCategoryClick(category.name)}
-              />
+              <CategoryCard key={category.id} category={category} />
             ))}
           </div>
         </section>
@@ -185,11 +168,7 @@ export default function HomePage() {
         <section className="space-y-6">
           <Tabs defaultValue="all" className="w-full">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold">
-                {selectedCategory
-                  ? `${selectedCategory} Courses`
-                  : "All Courses"}
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-bold">All Courses</h2>
               <TabsList>
                 <TabsTrigger value="all">
                   <Sparkles className="h-4 w-4 mr-2" />
@@ -203,21 +182,6 @@ export default function HomePage() {
             </div>
 
             <TabsContent value="all" className="space-y-6">
-              {selectedCategory && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Filtering by: <strong>{selectedCategory}</strong>
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedCategory(null)}
-                  >
-                    Clear
-                  </Button>
-                </div>
-              )}
-
               {filteredCourses.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">
