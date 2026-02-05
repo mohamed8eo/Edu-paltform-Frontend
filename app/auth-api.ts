@@ -94,7 +94,38 @@ export const tokenManager = {
 
   removeToken: () => {
     localStorage.removeItem(TOKEN_KEY);
-    document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`;
+
+    // Clear all cookies
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      const [name] = cookie.trim().split("=");
+      // Set expired cookie for each cookie path
+      document.cookie = `${name}=; path=/; max-age=0`;
+      document.cookie = `${name}=; path=/; domain=${window.location.hostname}; max-age=0`;
+      document.cookie = `${name}=; max-age=0`;
+    }
+
+    // Also clear any session storage data
+    sessionStorage.clear();
+  },
+
+  clearAllAuthCookies: () => {
+    // List of common auth cookie names to clear
+    const authCookieNames = [
+      TOKEN_KEY,
+      "better-auth.session_token",
+      "session_token",
+      "auth_token",
+      "access_token",
+      "refresh_token",
+      "user_session",
+    ];
+
+    authCookieNames.forEach((name) => {
+      document.cookie = `${name}=; path=/; max-age=0`;
+      document.cookie = `${name}=; path=/; domain=${window.location.hostname}; max-age=0`;
+      document.cookie = `${name}=; max-age=0`;
+    });
   },
 
   hasToken: (): boolean => {
@@ -256,8 +287,89 @@ export const authApi = {
     return null;
   },
 
-  signOut: async () => {
-    tokenManager.removeToken();
-    // You can also call a backend endpoint if needed
+  signOut: async (): Promise<void> => {
+    console.log("📡 Starting sign-out process...");
+
+    try {
+      // Call backend sign-out endpoint
+      const res = await fetch(`${API_BASE_URL}/auth/sign-out`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // CRITICAL: This sends cookies to the backend
+      });
+
+      const data = await res.json();
+      console.log("📥 Sign-out response:", data);
+
+      if (!res.ok) {
+        console.warn("⚠️ Sign-out API returned non-OK status:", res.status);
+      }
+    } catch (err) {
+      console.error("❌ Sign-out API call failed:", err);
+      // Continue to clear local data even if backend fails
+    }
+
+    // Clear all local storage
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.clear();
+      console.log("✅ LocalStorage cleared");
+    } catch (e) {
+      console.error("❌ Error clearing localStorage:", e);
+    }
+
+    // Clear session storage
+    try {
+      sessionStorage.clear();
+      console.log("✅ SessionStorage cleared");
+    } catch (e) {
+      console.error("❌ Error clearing sessionStorage:", e);
+    }
+
+    // Try to clear client-side accessible cookies
+    // Note: HTTP-only cookies are already cleared by the backend
+    try {
+      const cookies = document.cookie.split(";");
+      for (let cookie of cookies) {
+        const [name] = cookie.trim().split("=");
+        if (name) {
+          // Clear for root path
+          document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:01 GMT`;
+
+          // Clear for current domain
+          document.cookie = `${name}=; path=/; domain=${window.location.hostname}; max-age=0; expires=Thu, 01 Jan 1970 00:00:01 GMT`;
+
+          // Clear for parent domain (with leading dot)
+          document.cookie = `${name}=; path=/; domain=.${window.location.hostname}; max-age=0; expires=Thu, 01 Jan 1970 00:00:01 GMT`;
+        }
+      }
+      console.log("✅ Client-side cookies cleared");
+    } catch (e) {
+      console.error("❌ Error clearing cookies:", e);
+    }
+
+    console.log("✅ Sign-out complete, redirecting...");
+
+    // Force a complete page reload to clear all React state and navigate to login
+    // This is better than router.push() because it ensures complete state reset
+    window.location.href = "/";
+  },
+
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated: async (): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/check`, {
+        method: "GET",
+        credentials: "include",
+      });
+      return res.ok;
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      return false;
+    }
   },
 };

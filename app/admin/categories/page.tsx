@@ -19,6 +19,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { CategoryForm } from "@/components/admin/category-form";
 import {
   Trash2,
@@ -45,14 +52,18 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<ApiCategory | null>(
     null,
   );
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [expandedParents, setExpandedParents] = useState<Set<string>>(
     new Set(),
   );
+  const [deletingCategorySlug, setDeletingCategorySlug] = useState<
+    string | null
+  >(null);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/categorie/tree`, {
+      const response = await fetch("/api/categorie/tree", {
         method: "GET",
         credentials: "include",
       });
@@ -67,6 +78,7 @@ export default function CategoriesPage() {
         return items.flatMap((item) => [
           {
             id: item.id,
+            slug: item.slug || "",
             name: item.name,
             description: item.description,
             image: item.image,
@@ -90,14 +102,14 @@ export default function CategoriesPage() {
   }, []);
 
   const handleAddCategory = async (data: ApiCategory) => {
+    setSubmitting(true);
     try {
-      setSubmitting(true);
       const response = await fetch(`${API_BASE_URL}/categorie`, {
         method: "POST",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           name: data.name,
           description: data.description,
@@ -105,11 +117,12 @@ export default function CategoriesPage() {
           parentId: data.parentId || null,
         }),
       });
+
       if (!response.ok) {
         throw new Error("Failed to create category");
       }
-      // Refresh the tree after adding
-      fetchCategories();
+
+      await fetchCategories();
     } catch (error) {
       console.error("Error creating category:", error);
       throw error;
@@ -119,48 +132,87 @@ export default function CategoriesPage() {
   };
 
   const handleUpdateCategory = async (data: ApiCategory) => {
+    setSubmitting(true);
+
+    console.log("=== Update Category Debug ===");
+    console.log("Category data:", data);
+    console.log("Slug:", data.slug);
+
     try {
-      setSubmitting(true);
-      const response = await fetch(`${API_BASE_URL}/categorie/${data.id}`, {
+      // Validate slug before making request
+      if (!data.slug || data.slug.trim() === "") {
+        throw new Error("Category slug is missing or empty");
+      }
+
+      const endpoint = `${API_BASE_URL}/categorie/update/${encodeURIComponent(data.slug)}`;
+      console.log("Full endpoint URL:", endpoint);
+
+      const payload = {
+        name: data.name,
+        description: data.description ?? null,
+        image: data.image ?? null,
+        parentId: data.parentId ?? null,
+      };
+      console.log("Payload:", JSON.stringify(payload, null, 2));
+
+      const response = await fetch(endpoint, {
         method: "PUT",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: data.name,
-          description: data.description,
-          image: data.image,
-          parentId: data.parentId || null,
-        }),
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
+
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
       if (!response.ok) {
-        throw new Error("Failed to update category");
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(
+          `Failed to update category: ${response.status} - ${errorText}`,
+        );
       }
-      // Refresh the tree after updating
-      fetchCategories();
+
+      const result = await response.json();
+      console.log("Success result:", result);
+
+      await fetchCategories();
+      setIsEditDialogOpen(false);
       setEditingCategory(null);
     } catch (error) {
+      console.error("=== Update Error ===");
       console.error("Error updating category:", error);
+
+      // Show error to user
+      alert(
+        error instanceof Error ? error.message : "Failed to update category",
+      );
       throw error;
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
+  const handleDeleteCategory = async (slug: string) => {
+    setDeletingCategorySlug(slug);
     try {
-      const response = await fetch(`${API_BASE_URL}/categorie/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/categorie/delete/${slug}`, {
         method: "DELETE",
         credentials: "include",
       });
+
       if (!response.ok) {
         throw new Error("Failed to delete category");
       }
-      // Refresh the tree after deleting
-      fetchCategories();
+
+      await fetchCategories();
     } catch (error) {
       console.error("Error deleting category:", error);
+      throw error;
+    } finally {
+      setDeletingCategorySlug(null);
     }
   };
 
@@ -174,6 +226,11 @@ export default function CategoriesPage() {
       }
       return next;
     });
+  };
+
+  const handleEditClick = (category: ApiCategory) => {
+    setEditingCategory(category);
+    setIsEditDialogOpen(true);
   };
 
   // Count total categories from tree
@@ -191,7 +248,7 @@ export default function CategoriesPage() {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20">
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-        
+
         <div className="relative p-8">
           <div className="flex items-start justify-between">
             <div className="space-y-3">
@@ -201,16 +258,16 @@ export default function CategoriesPage() {
                   Content Organization
                 </span>
               </div>
-              
+
               <h1 className="text-4xl font-bold tracking-tight">
                 <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
                   Category Management
                 </span>
               </h1>
-              
+
               <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
-                Create and organize categories. Sub-categories inherit from parent
-                categories and create a hierarchical structure.
+                Create and organize categories. Sub-categories inherit from
+                parent categories and create a hierarchical structure.
               </p>
             </div>
 
@@ -221,7 +278,9 @@ export default function CategoriesPage() {
                     {loading ? "..." : totalCategories}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground font-medium">Total Categories</p>
+                <p className="text-xs text-muted-foreground font-medium">
+                  Total Categories
+                </p>
               </div>
             </div>
           </div>
@@ -235,10 +294,7 @@ export default function CategoriesPage() {
           <div className="sticky top-6">
             <CategoryForm
               categories={flatCategories}
-              initialData={editingCategory || undefined}
-              onSubmit={
-                editingCategory ? handleUpdateCategory : handleAddCategory
-              }
+              onSubmit={handleAddCategory}
               isLoading={submitting}
             />
           </div>
@@ -262,12 +318,14 @@ export default function CategoriesPage() {
                   </CardDescription>
                 </div>
 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="gap-2"
                   onClick={() => {
-                    setExpandedParents(new Set(flatCategories.map(c => c.id)));
+                    setExpandedParents(
+                      new Set(flatCategories.map((c) => c.id)),
+                    );
                   }}
                 >
                   <FolderOpen className="w-4 h-4" />
@@ -283,7 +341,9 @@ export default function CategoriesPage() {
                     <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
                     <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin"></div>
                   </div>
-                  <p className="text-sm text-muted-foreground">Loading categories...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Loading categories...
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -292,9 +352,12 @@ export default function CategoriesPage() {
                       <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                         <Folder className="w-10 h-10 text-primary/50" />
                       </div>
-                      <h3 className="text-lg font-semibold mb-2">No categories yet</h3>
+                      <h3 className="text-lg font-semibold mb-2">
+                        No categories yet
+                      </h3>
                       <p className="text-sm text-muted-foreground max-w-sm">
-                        Get started by creating your first category using the form on the left.
+                        Get started by creating your first category using the
+                        form on the left.
                       </p>
                     </div>
                   ) : (
@@ -306,8 +369,9 @@ export default function CategoriesPage() {
                           level={0}
                           expandedParents={expandedParents}
                           onToggleExpanded={toggleExpanded}
-                          onEdit={setEditingCategory}
+                          onEdit={handleEditClick}
                           onDelete={handleDeleteCategory}
+                          deletingCategorySlug={deletingCategorySlug}
                         />
                       ))}
                     </div>
@@ -318,6 +382,31 @@ export default function CategoriesPage() {
           </Card>
         </div>
       </div>
+
+      Edit Category Dialog
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <Edit2 className="w-5 h-5 text-blue-600" />
+              </div>
+              Edit Category
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Update category details and information
+            </DialogDescription>
+          </DialogHeader>
+          {editingCategory && (
+            <CategoryForm
+              categories={flatCategories}
+              initialData={editingCategory}
+              onSubmit={handleUpdateCategory}
+              isLoading={submitting}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -328,7 +417,8 @@ interface CategoryItemProps {
   expandedParents: Set<string>;
   onToggleExpanded: (id: string) => void;
   onEdit: (category: ApiCategory) => void;
-  onDelete: (id: string) => void;
+  onDelete: (slug: string) => void;
+  deletingCategorySlug: string | null;
 }
 
 function CategoryItem({
@@ -338,6 +428,7 @@ function CategoryItem({
   onToggleExpanded,
   onEdit,
   onDelete,
+  deletingCategorySlug,
 }: CategoryItemProps) {
   const isExpanded = expandedParents.has(category.id);
   const hasChildren = category.children.length > 0;
@@ -394,7 +485,9 @@ function CategoryItem({
           {/* Category Details */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <p className="font-semibold text-base truncate">{category.name}</p>
+              <p className="font-semibold text-base truncate">
+                {category.name}
+              </p>
               {hasChildren && (
                 <Badge variant="secondary" className="text-xs">
                   {category.children.length}
@@ -415,6 +508,7 @@ function CategoryItem({
             onClick={() =>
               onEdit({
                 id: category.id,
+                slug: category.slug || "",
                 name: category.name,
                 description: category.description,
                 image: category.image,
@@ -427,15 +521,26 @@ function CategoryItem({
           >
             <Edit2 className="w-4 h-4" />
           </Button>
-          
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-9 w-9 p-0 text-destructive hover:bg-destructive/10"
+                disabled={
+                  deletingCategorySlug === (category.slug || category.id)
+                }
               >
-                <Trash2 className="w-4 h-4" />
+                {deletingCategorySlug === (category.slug || category.id) ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-destructive/30 border-t-destructive rounded-full animate-spin" />
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                  </>
+                )}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="border-2">
@@ -448,18 +553,24 @@ function CategoryItem({
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-base pt-2">
                   Are you sure you want to delete{" "}
-                  <span className="font-semibold text-foreground">"{category.name}"</span>?
+                  <span className="font-semibold text-foreground">
+                    "{category.name}"
+                  </span>
+                  ?
                   {hasChildren && (
                     <span className="block mt-2 text-destructive">
-                      ⚠️ This will also delete {category.children.length} sub-category(ies).
+                      ⚠️ This will also delete {category.children.length}{" "}
+                      sub-category(ies).
                     </span>
                   )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="flex gap-3 justify-end mt-4">
-                <AlertDialogCancel className="border-2">Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="border-2">
+                  Cancel
+                </AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => onDelete(category.id)}
+                  onClick={() => onDelete(category.slug || category.id)}
                   className="bg-destructive hover:bg-destructive/90 shadow-lg"
                 >
                   Delete Category
@@ -482,6 +593,7 @@ function CategoryItem({
               onToggleExpanded={onToggleExpanded}
               onEdit={onEdit}
               onDelete={onDelete}
+              deletingCategorySlug={deletingCategorySlug}
             />
           ))}
         </div>

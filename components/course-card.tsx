@@ -29,13 +29,12 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
             fill
             className="object-cover transition-transform duration-300 "
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            quality={90}
             priority={false}
           />
-          
+
           {/* Dark Overlay on Hover */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300" />
-          
+
           {/* Video Play Icon - Shows on Hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
             <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
@@ -75,9 +74,7 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
 
         {/* Instructor (if available) */}
         {course.instructor && (
-          <p className="text-xs text-muted-foreground">
-            {course.instructor}
-          </p>
+          <p className="text-xs text-muted-foreground">{course.instructor}</p>
         )}
 
         {/* Meta Info Row */}
@@ -87,7 +84,7 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
             <Badge variant="secondary" className="text-xs px-2 py-0.5">
               {course.level}
             </Badge>
-            
+
             {/* Duration (if available) */}
             {course.duration && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -98,9 +95,9 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
           </div>
         </div>
 
-        {/* Price or CTA */}
+        {/* CTA or Status */}
         <div className="pt-2 flex items-center justify-between">
-          {course.price ? (
+          {course.price !== undefined ? (
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-bold">${course.price}</span>
               {course.originalPrice && (
@@ -114,7 +111,7 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
               Free
             </Badge>
           )}
-          
+
           {/* Language Badge */}
           <Badge variant="outline" className="text-xs">
             {course.language}

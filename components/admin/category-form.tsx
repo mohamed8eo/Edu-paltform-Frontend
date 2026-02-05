@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,13 +19,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit3, X, Loader2, Image as ImageIcon, Sparkles } from "lucide-react";
+import {
+  Plus,
+  Edit3,
+  X,
+  Loader2,
+  Image as ImageIcon,
+  Sparkles,
+} from "lucide-react";
 import type { ApiCategory } from "@/types/course";
 
 interface CategoryFormProps {
   categories: ApiCategory[];
   initialData?: ApiCategory;
   onSubmit: (data: ApiCategory) => void;
+  onReset?: () => void;
   isLoading?: boolean;
 }
 
@@ -33,6 +41,7 @@ export function CategoryForm({
   categories,
   initialData,
   onSubmit,
+  onReset,
   isLoading,
 }: CategoryFormProps) {
   const [formData, setFormData] = useState({
@@ -42,6 +51,18 @@ export function CategoryForm({
     parentId: initialData?.parentId || "",
   });
 
+  // Update form when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        description: initialData.description || "",
+        image: initialData.image || "",
+        parentId: initialData.parentId || "",
+      });
+    }
+  }, [initialData]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -49,11 +70,17 @@ export function CategoryForm({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const resetForm = () => {
+    setFormData({ name: "", description: "", image: "", parentId: "" });
+    onReset?.();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const data: ApiCategory = {
       id: initialData?.id || "",
+      slug: initialData?.slug || "",
       name: formData.name,
       description: formData.description,
       image: formData.image,
@@ -79,16 +106,12 @@ export function CategoryForm({
       {/* Header with gradient */}
       <CardHeader className="relative border-b bg-gradient-to-br from-primary/10 via-primary/5 to-background">
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
-        
+
         <div className="relative space-y-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl flex items-center gap-2">
               {isEditing ? (
                 <>
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                    <Edit3 className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <span>Edit Category</span>
                 </>
               ) : (
                 <>
@@ -99,8 +122,8 @@ export function CategoryForm({
                 </>
               )}
             </CardTitle>
-            
-            {isEditing && (
+
+            {isEditing && onReset && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -111,10 +134,10 @@ export function CategoryForm({
               </Button>
             )}
           </div>
-          
+
           <CardDescription className="text-base">
             {isEditing
-              ? "Update category information"
+              ? ""
               : "Fill in the details to create a new category"}
           </CardDescription>
         </div>
@@ -124,7 +147,10 @@ export function CategoryForm({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Category Name */}
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-semibold flex items-center gap-2">
+            <Label
+              htmlFor="name"
+              className="text-sm font-semibold flex items-center gap-2"
+            >
               Category Name
               <span className="text-destructive">*</span>
             </Label>
@@ -144,9 +170,14 @@ export function CategoryForm({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-semibold flex items-center gap-2">
+            <Label
+              htmlFor="description"
+              className="text-sm font-semibold flex items-center gap-2"
+            >
               Description
-              <span className="text-destructive">*</span>
+              <span className="text-xs text-muted-foreground font-normal">
+                (Optional)
+              </span>
             </Label>
             <div className="relative">
               <Textarea
@@ -158,17 +189,21 @@ export function CategoryForm({
                 className="min-h-[100px] resize-none border-primary/20"
                 disabled={isLoading}
                 rows={3}
-                required
               />
             </div>
           </div>
 
           {/* Image URL */}
           <div className="space-y-2">
-            <Label htmlFor="image" className="text-sm font-semibold flex items-center gap-2">
+            <Label
+              htmlFor="image"
+              className="text-sm font-semibold flex items-center gap-2"
+            >
               <ImageIcon className="w-4 h-4" />
               Image URL
-              <span className="text-destructive">*</span>
+              <span className="text-xs text-muted-foreground font-normal">
+                (Optional)
+              </span>
             </Label>
             <Input
               id="image"
@@ -179,18 +214,20 @@ export function CategoryForm({
               onChange={handleChange}
               className="h-11 border-primary/20"
               disabled={isLoading}
-              required
             />
             {formData.image && (
               <div className="mt-3 p-3 rounded-lg border-2 border-primary/20 bg-muted/30">
-                <p className="text-xs text-muted-foreground mb-2 font-medium">Preview:</p>
+                <p className="text-xs text-muted-foreground mb-2 font-medium">
+                  Preview:
+                </p>
                 <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted">
                   <img
                     src={formData.image}
                     alt="Category preview"
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3EInvalid URL%3C/text%3E%3C/svg%3E";
+                      e.currentTarget.src =
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3EInvalid URL%3C/text%3E%3C/svg%3E";
                     }}
                   />
                 </div>
@@ -200,9 +237,14 @@ export function CategoryForm({
 
           {/* Parent Category */}
           <div className="space-y-2">
-            <Label htmlFor="parentId" className="text-sm font-semibold flex items-center gap-2">
+            <Label
+              htmlFor="parentId"
+              className="text-sm font-semibold flex items-center gap-2"
+            >
               Parent Category
-              <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
+              <span className="text-xs text-muted-foreground font-normal">
+                (Optional)
+              </span>
             </Label>
             <Select
               value={formData.parentId || "none"}
