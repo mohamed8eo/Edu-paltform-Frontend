@@ -7,6 +7,10 @@ export interface Lesson {
   duration: string;
   position: number;
   createdAt: string;
+  // Progress tracking fields
+  isCompleted?: boolean;
+  isLocked?: boolean;
+  order?: number;
 }
 
 export interface Course {
@@ -31,6 +35,11 @@ export interface Course {
   lessons?: Lesson[];
   price?: number;
   originalPrice?: number;
+  totalLessons?: number;
+  completedLessons?: number;
+  // Progress and enrollment fields
+  progress?: number;
+  enrolled?: boolean;
   // Subscription-specific fields
   subscriptionStatus?: string;
   subscriptionProgress?: number;

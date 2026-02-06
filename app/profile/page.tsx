@@ -6,14 +6,12 @@ import { Footer } from "@/components/footer";
 import { CourseCard } from "@/components/course-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Calendar,
   BookOpen,
   CheckCircle2,
-  Bookmark,
   Clock,
   RefreshCw,
   AlertCircle,
@@ -38,7 +36,6 @@ export default function ProfilePage() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [subscribedCourses, setSubscribedCourses] = useState<Course[]>([]);
-  const [savedCourses, setSavedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Get subscribed courses from localStorage
@@ -70,36 +67,7 @@ export default function ProfilePage() {
     return courses;
   };
 
-  // Get saved courses from localStorage
-  const getLocalSavedCourses = (): Course[] => {
-    const courses: Course[] = [];
-
-    // Iterate through localStorage to find saved courses
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (
-        key &&
-        key.startsWith("course_saved_") &&
-        localStorage.getItem(key) === "true"
-      ) {
-        const slug = key.replace("course_saved_", "");
-
-        // Try to get course data from localStorage cache
-        const courseData = localStorage.getItem(`course_data_${slug}`);
-        if (courseData) {
-          try {
-            courses.push(JSON.parse(courseData));
-          } catch (e) {
-            console.error("Error parsing course data:", e);
-          }
-        }
-      }
-    }
-
-    return courses;
-  };
-
-  // Fetch user's subscribed and saved courses
+  // Fetch user's subscribed courses
   const fetchUserCourses = async () => {
     setLoading(true);
 
@@ -116,7 +84,7 @@ export default function ProfilePage() {
       if (subscribedResponse.ok) {
         const subscribedData = await subscribedResponse.json();
         console.log("Subscribed courses response:", subscribedData);
-        
+
         setSubscribedCourses(
           Array.isArray(subscribedData.courses) ? subscribedData.courses : [],
         );
@@ -124,13 +92,13 @@ export default function ProfilePage() {
         console.error(
           "Failed to fetch subscribed courses:",
           subscribedResponse.status,
-          await subscribedResponse.text()
+          await subscribedResponse.text(),
         );
-        
+
         // Fallback to localStorage
         const localSubscribed = getLocalSubscribedCourses();
         setSubscribedCourses(localSubscribed);
-        
+
         if (localSubscribed.length > 0) {
           toast({
             title: "Using Local Data",
@@ -139,43 +107,12 @@ export default function ProfilePage() {
           });
         }
       }
-
-      // Fetch saved courses from API
-      const savedResponse = await fetch("/api/user/saved-courses", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (savedResponse.ok) {
-        const savedData = await savedResponse.json();
-        console.log("Saved courses response:", savedData);
-        
-        setSavedCourses(
-          Array.isArray(savedData.courses) ? savedData.courses : [],
-        );
-      } else {
-        console.error(
-          "Failed to fetch saved courses:",
-          savedResponse.status,
-          await savedResponse.text()
-        );
-        
-        // Fallback to localStorage
-        const localSaved = getLocalSavedCourses();
-        setSavedCourses(localSaved);
-      }
     } catch (error) {
       console.error("Error fetching user courses:", error);
 
       // Fallback to localStorage on error
       const localSubscribed = getLocalSubscribedCourses();
-      const localSaved = getLocalSavedCourses();
-
       setSubscribedCourses(localSubscribed);
-      setSavedCourses(localSaved);
 
       toast({
         title: "Connection Error",
@@ -211,7 +148,6 @@ export default function ProfilePage() {
     : [];
   const totalCourses = coursesArray.length;
   const completedCourses = 0; // You can track this separately if needed
-  const totalSaved = Array.isArray(savedCourses) ? savedCourses.length : 0;
   const completionRate =
     totalCourses > 0 ? Math.round((completedCourses / totalCourses) * 100) : 0;
 
@@ -407,16 +343,6 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-purple-500/20 shadow-xl bg-gradient-to-br from-purple-500/5 to-transparent hover:shadow-2xl transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <Bookmark className="h-8 w-8 text-purple-500" />
-                  </div>
-                  <p className="text-3xl font-bold">{totalSaved}</p>
-                  <p className="text-sm text-muted-foreground">Saved</p>
-                </CardContent>
-              </Card>
-
               <Card className="border-2 border-orange-500/20 shadow-xl bg-gradient-to-br from-orange-500/5 to-transparent hover:shadow-2xl transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
@@ -470,85 +396,41 @@ export default function ProfilePage() {
           {/* Main Content */}
           <div className="lg:col-span-8">
             <Card className="border-2 shadow-xl bg-card/50 backdrop-blur-sm">
-              <Tabs defaultValue="subscribed" className="space-y-0">
-                <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent pb-0">
-                  <TabsList className="grid w-full grid-cols-2 h-auto p-0 bg-transparent">
-                    <TabsTrigger
-                      value="subscribed"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-t-lg data-[state=active]:border-b-2 data-[state=active]:border-primary py-4"
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Subscribed ({coursesArray.length})
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="saved"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-lg rounded-t-lg data-[state=active]:border-b-2 data-[state=active]:border-primary py-4"
-                    >
-                      <Bookmark className="h-4 w-4 mr-2" />
-                      Saved ({totalSaved})
-                    </TabsTrigger>
-                  </TabsList>
-                </CardHeader>
+              <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent pb-0">
+                <CardTitle className="flex items-center gap-2 py-4">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  My Courses ({coursesArray.length})
+                </CardTitle>
+              </CardHeader>
 
-                <CardContent className="p-6">
-                  <TabsContent value="subscribed" className="mt-0 space-y-6">
-                    {coursesArray.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                          <BookOpen className="h-10 w-10 text-primary/50" />
-                        </div>
-                        <h3 className="text-xl font-bold mb-2">
-                          No subscribed courses yet
-                        </h3>
-                        <p className="text-muted-foreground mb-6 max-w-sm">
-                          Start your learning journey by subscribing to a course
-                          today
-                        </p>
-                        <Button size="lg" className="gap-2" asChild>
-                          <a href="/home">
-                            <BookOpen className="h-5 w-5" />
-                            Browse Courses
-                          </a>
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {coursesArray.map((course) => (
-                          <div key={course.id} className="relative">
-                            <Badge className="absolute top-4 right-4 z-10 bg-gradient-to-r from-green-500 to-green-600 shadow-lg">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Subscribed
-                            </Badge>
-                            <CourseCard course={course} />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="saved" className="mt-0 space-y-6">
-                    {savedCourses.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
-                          <Bookmark className="h-10 w-10 text-purple-500/50" />
-                        </div>
-                        <h3 className="text-xl font-bold mb-2">
-                          No saved courses yet
-                        </h3>
-                        <p className="text-muted-foreground max-w-sm">
-                          Save interesting courses to watch later
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {savedCourses.map((course) => (
-                          <CourseCard key={course.id} course={course} />
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                </CardContent>
-              </Tabs>
+              <CardContent className="p-6">
+                {coursesArray.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <BookOpen className="h-10 w-10 text-primary/50" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">
+                      No subscribed courses yet
+                    </h3>
+                    <p className="text-muted-foreground mb-6 max-w-sm">
+                      Start your learning journey by subscribing to a course
+                      today
+                    </p>
+                    <Button size="lg" className="gap-2" asChild>
+                      <a href="/home">
+                        <BookOpen className="h-5 w-5" />
+                        Browse Courses
+                      </a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {coursesArray.map((course) => (
+                      <CourseCard key={course.id} course={course} />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </div>
         </div>

@@ -486,29 +486,15 @@ export default function CoursePage({
                       </p>
                     </div>
                   )}
-
-                  <Button
-                    variant={isSaved ? "default" : "outline"}
-                    className="w-full h-11"
-                    onClick={handleSaveCourse}
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <Spinner className="w-4 h-4 mr-2" />
-                        {isSaved ? "Removing..." : "Saving..."}
-                      </>
-                    ) : (
-                      <>
-                        <Heart
-                          className={`w-4 h-4 mr-2 transition-all ${
-                            isSaved ? "fill-current scale-110" : ""
-                          }`}
-                        />
-                        {isSaved ? "Saved" : "Save Course"}
-                      </>
-                    )}
-                  </Button>
+<Link href={`/courses/watch/${course.slug}`}>
+  <Button 
+    className="w-full h-11 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+    size="lg"
+  >
+    <Play className="w-4 h-4 mr-2" />
+    Start Watching
+  </Button>
+</Link>
 
                   <Button variant="ghost" className="w-full h-11">
                     <Share2 className="w-4 h-4 mr-2" />

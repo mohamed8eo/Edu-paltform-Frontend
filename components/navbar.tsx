@@ -195,7 +195,7 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link href="/home" className="flex items-center gap-2">
+                    <Link href="/my-courses" className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4" />
                       <span>My Courses</span>
                     </Link>

@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Play, Clock } from "lucide-react";
 import type { Course } from "@/types/course";
@@ -12,9 +13,15 @@ interface CourseCardProps {
   course: Course;
   onEnroll?: (courseId: string) => void;
   onSave?: (courseId: string) => void;
+  showProgress?: boolean;
 }
 
-export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
+export function CourseCard({
+  course,
+  onEnroll,
+  onSave,
+  showProgress,
+}: CourseCardProps) {
   // Use slug for navigation, fallback to id if slug is not available
   const courseSlug = course.slug || course.id;
 
@@ -43,16 +50,18 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
           </div>
 
           {/* Save Button */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              onSave?.(course.id);
-            }}
-            className="absolute top-2 right-2 p-2 rounded-full bg-white/95 hover:bg-white transition-all shadow-md hover:shadow-lg z-10"
-            aria-label="Save course"
-          >
-            <Bookmark className="w-4 h-4 text-gray-700" />
-          </button>
+          {onSave && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                onSave(course.id);
+              }}
+              className="absolute top-2 right-2 p-2 rounded-full bg-white/95 hover:bg-white transition-all shadow-md hover:shadow-lg z-10"
+              aria-label="Save course"
+            >
+              <Bookmark className="w-4 h-4 text-gray-700" />
+            </button>
+          )}
         </div>
       </Link>
 
@@ -72,6 +81,17 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
           </p>
         )}
 
+        {/* Progress bar (for my-courses page) */}
+        {showProgress && course.progress !== undefined && (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Progress</span>
+              <span className="font-medium">{course.progress}%</span>
+            </div>
+            <Progress value={course.progress} className="h-1.5" />
+          </div>
+        )}
+
         {/* Instructor (if available) */}
         {course.instructor && (
           <p className="text-xs text-muted-foreground">{course.instructor}</p>
@@ -81,9 +101,11 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-2">
             {/* Level Badge */}
-            <Badge variant="secondary" className="text-xs px-2 py-0.5">
-              {course.level}
-            </Badge>
+            {course.level && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                {course.level}
+              </Badge>
+            )}
 
             {/* Duration (if available) */}
             {course.duration && (
@@ -97,7 +119,11 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
 
         {/* CTA or Status */}
         <div className="pt-2 flex items-center justify-between">
-          {course.price !== undefined ? (
+          {onEnroll ? (
+            <Button size="sm" onClick={() => onEnroll(course.id)}>
+              Continue
+            </Button>
+          ) : course.price !== undefined ? (
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-bold">${course.price}</span>
               {course.originalPrice && (
@@ -113,9 +139,11 @@ export function CourseCard({ course, onEnroll, onSave }: CourseCardProps) {
           )}
 
           {/* Language Badge */}
-          <Badge variant="outline" className="text-xs">
-            {course.language}
-          </Badge>
+          {course.language && (
+            <Badge variant="outline" className="text-xs">
+              {course.language}
+            </Badge>
+          )}
         </div>
       </div>
     </Card>
