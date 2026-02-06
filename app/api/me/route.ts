@@ -1,41 +1,34 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET(request: NextRequest) {
   try {
-    const token =
-      request.cookies.get('better-auth.session_token')?.value
+    console.log("🔍 [API/me] BACKEND_URL:", BACKEND_URL);
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      )
-    }
+    const headers = await getBackendHeaders();
 
-    const response = await fetch('http://localhost:8080/me', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `better-auth.session_token=${token}`,
-      },
-    })
+    console.log(
+      "🔍 [API/me] Forwarding headers with Authorization Bearer token",
+    );
+
+    const response = await fetch(`${BACKEND_URL}/me`, {
+      method: "GET",
+      headers,
+    });
 
     if (!response.ok) {
-      const error = await response.text()
-      return NextResponse.json(
-        { error },
-        { status: response.status }
-      )
+      const error = await response.text();
+      return NextResponse.json({ error }, { status: response.status });
     }
 
-    const data = await response.json()
-    return NextResponse.json(data)
-
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
-      { error: 'Internal error', details: String(err) },
-      { status: 500 }
-    )
+      { error: "Internal error", details: String(err) },
+      { status: 500 },
+    );
   }
 }

@@ -1,21 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string }> },
 ) {
   try {
-    const token = request.cookies.get("better-auth.session_token")?.value;
     const resolvedParams = await params;
     const { courseId } = resolvedParams;
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Not authenticated" },
-        { status: 401 },
-      );
-    }
 
     if (!courseId) {
       return NextResponse.json(
@@ -24,17 +18,12 @@ export async function GET(
       );
     }
 
-    // Fixed typo: "subscibe" -> "subscribe"
-    const response = await fetch(
-      `http://localhost:8080/me/subscibe/${courseId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `better-auth.session_token=${token}`,
-        },
-      },
-    );
+    const headers = await getBackendHeaders();
+
+    const response = await fetch(`${BACKEND_URL}/me/subscibe/${courseId}`, {
+      method: "GET",
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();

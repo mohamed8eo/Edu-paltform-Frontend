@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get("better-auth.session_token")?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Not authenticated" },
-        { status: 401 },
-      );
-    }
-
+    const headers = await getBackendHeaders();
     const body = await request.json();
     const { courseId } = body;
 
@@ -22,12 +16,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch("http://localhost:8080/me/add-course", {
+    const response = await fetch(`${BACKEND_URL}/me/add-course`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `better-auth.session_token=${token}`,
-      },
+      headers,
       body: JSON.stringify({ courseId }),
     });
 

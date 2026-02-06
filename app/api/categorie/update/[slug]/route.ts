@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function PUT(
   request: Request,
@@ -18,25 +20,15 @@ export async function PUT(
     const body = await request.json();
     console.log("Request body:", JSON.stringify(body, null, 2));
 
-    // Get all cookies from the incoming request
-    const cookieStore = await import("next/headers").then((mod) =>
-      mod.cookies(),
-    );
-    const cookies = cookieStore.getAll();
+    const headers = await getBackendHeaders();
+    console.log("Headers: Using getBackendHeaders()");
 
-    // Build Cookie header manually
-    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-    console.log("Cookies:", cookieHeader ? "Present" : "None");
-
-    const backendUrl = `http://localhost:8080/categorie/update/${slug}`;
+    const backendUrl = `${BACKEND_URL}/categorie/update/${slug}`;
     console.log("Backend URL:", backendUrl);
 
     const response = await fetch(backendUrl, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookieHeader,
-      },
+      headers,
       body: JSON.stringify(body),
     });
 
@@ -63,8 +55,11 @@ export async function PUT(
   } catch (error) {
     console.error("=== PUT Error ===");
     console.error("Error updating category:", error);
-    console.error("Error details:", error instanceof Error ? error.message : error);
-    
+    console.error(
+      "Error details:",
+      error instanceof Error ? error.message : error,
+    );
+
     return NextResponse.json(
       {
         error: "Failed to update category",

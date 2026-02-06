@@ -1,43 +1,27 @@
 import { NextResponse } from "next/server";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET() {
   try {
-    // Get all cookies from the incoming request
-    const cookieStore = await cookies();
-    const allCookies = cookieStore.getAll();
-
     // Get the authorization header from the incoming request
     const headersList = await headers();
     const authHeader = headersList.get("authorization");
 
-    // Build Cookie header string for the backend request
-    const cookieHeader = allCookies
-      .map((c) => `${c.name}=${c.value}`)
-      .join("; ");
+    // Get backend headers with cookies and token
+    const backendHeaders = await getBackendHeaders();
 
-    console.log(
-      "🚀 Proxy: Forwarding cookies:",
-      allCookies.map((c) => c.name).join(", "),
-    );
-    console.log("🚀 Proxy: Auth header:", authHeader || "none");
-
-    // Build headers for the backend request
-    const backendHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    // Forward authorization header if present
+    // Forward authorization header if present in the incoming request
     if (authHeader) {
-      backendHeaders["Authorization"] = authHeader;
+      (backendHeaders as Record<string, string>)["Authorization"] = authHeader;
     }
 
-    const response = await fetch("http://localhost:8080/admin/traffic/daily", {
+    console.log("🚀 Proxy: Forwarding headers with Authorization Bearer token");
+
+    const response = await fetch(`${BACKEND_URL}/admin/traffic/daily`, {
       method: "GET",
-      headers: {
-        ...backendHeaders,
-        Cookie: cookieHeader,
-      },
+      headers: backendHeaders,
     });
 
     console.log("🚀 Proxy: Backend response status:", response.status);

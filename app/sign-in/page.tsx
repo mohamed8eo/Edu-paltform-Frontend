@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/logo";
 import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react";
 import { authApi, tokenManager } from "@/app/auth-api";
+import { NEXT_PUBLIC_BACKEND_URL } from "@/lib/api";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -89,14 +90,17 @@ export default function SignInPage() {
     setIsLoading(true);
     try {
       console.log("📡 Calling /auth/sign-in-social...");
-      const res = await fetch("http://localhost:8080/auth/sign-in-social", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ provider }),
         },
-        credentials: "include",
-        body: JSON.stringify({ provider }),
-      });
+      );
 
       console.log("📥 Response status:", res.status);
       console.log("🍪 Set-Cookie header:", res.headers.get("set-cookie"));

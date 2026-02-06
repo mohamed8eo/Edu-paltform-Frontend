@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET(
   request: NextRequest,
@@ -9,19 +11,13 @@ export async function GET(
     const resolvedParams = await params;
     const { limit } = resolvedParams;
 
-    const token = request.cookies.get("better-auth.session_token")?.value;
+    const headers = await getBackendHeaders();
 
     // Call backend endpoint
-    const response = await fetch(
-      `http://localhost:8080/course/random/${limit}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Cookie: `better-auth.session_token=${token}` }),
-        },
-      },
-    );
+    const response = await fetch(`${BACKEND_URL}/course/random/${limit}`, {
+      method: "GET",
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({

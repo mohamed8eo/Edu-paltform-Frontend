@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET(
   request: Request,
@@ -6,26 +8,14 @@ export async function GET(
 ) {
   try {
     const resolvedParams = await params;
+    const { slug } = resolvedParams;
 
-    // Get all cookies from the incoming request
-    const cookieStore = await import("next/headers").then((mod) =>
-      mod.cookies(),
-    );
-    const cookies = cookieStore.getAll();
+    const headers = await getBackendHeaders();
 
-    // Build Cookie header manually
-    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-
-    const response = await fetch(
-      `http://localhost:8080/course/${resolvedParams.slug}/lessons`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: cookieHeader,
-        },
-      },
-    );
+    const response = await fetch(`${BACKEND_URL}/course/${slug}/lessons`, {
+      method: "GET",
+      headers,
+    });
 
     if (!response.ok) {
       return NextResponse.json(

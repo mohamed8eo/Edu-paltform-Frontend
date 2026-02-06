@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function POST(
   request: NextRequest,
@@ -9,27 +11,18 @@ export async function POST(
     const resolvedParams = await params;
     const { slug, id } = resolvedParams;
 
-    const token = request.cookies.get("better-auth.session_token")?.value;
+    const headers = await getBackendHeaders();
 
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Not authenticated" },
-        { status: 401 },
-      );
-    }
-
+    // Get the request body
     const body = await request.json();
     const { completed } = body;
 
     // Call backend endpoint
     const response = await fetch(
-      `http://localhost:8080/course/${slug}/lessons/${id}/progress`,
+      `${BACKEND_URL}/course/${slug}/lessons/${id}/progress`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `better-auth.session_token=${token}`,
-        },
+        headers,
         body: JSON.stringify({ completed }),
       },
     );
@@ -74,24 +67,14 @@ export async function GET(
     const resolvedParams = await params;
     const { slug, id } = resolvedParams;
 
-    const token = request.cookies.get("better-auth.session_token")?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Not authenticated" },
-        { status: 401 },
-      );
-    }
+    const headers = await getBackendHeaders();
 
     // Call backend endpoint
     const response = await fetch(
-      `http://localhost:8080/course/${slug}/lessons/${id}/progress`,
+      `${BACKEND_URL}/course/${slug}/lessons/${id}/progress`,
       {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `better-auth.session_token=${token}`,
-        },
+        headers,
       },
     );
 

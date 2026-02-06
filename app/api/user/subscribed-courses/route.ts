@@ -1,23 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get("better-auth.session_token")?.value;
+    const headers = await getBackendHeaders();
 
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Not authenticated" },
-        { status: 401 },
-      );
-    }
-
-    const response = await fetch("http://localhost:8080/me/subscibe/all", {
+    const response = await fetch(`${BACKEND_URL}/me/subscibe/all`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `better-auth.session_token=${token}`,
-      },
+      headers,
     });
 
     if (!response.ok) {

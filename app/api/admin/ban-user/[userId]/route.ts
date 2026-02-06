@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function POST(
   request: Request,
@@ -8,26 +10,13 @@ export async function POST(
     const { userId } = await params;
     const body = await request.json();
 
-    // Get all cookies from the incoming request
-    const cookieStore = await import("next/headers").then((mod) =>
-      mod.cookies(),
-    );
-    const cookies = cookieStore.getAll();
+    const headers = await getBackendHeaders();
 
-    // Build Cookie header manually
-    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-
-    const response = await fetch(
-      `http://localhost:8080/admin/ban-user/${userId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: cookieHeader,
-        },
-        body: JSON.stringify(body),
-      },
-    );
+    const response = await fetch(`${BACKEND_URL}/admin/ban-user/${userId}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       return NextResponse.json(

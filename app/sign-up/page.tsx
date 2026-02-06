@@ -1,98 +1,112 @@
-"use client"
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Logo } from "@/components/logo"
-import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react"
-import { authApi } from "@/app/auth-api"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Logo } from "@/components/logo";
+import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react";
+import { authApi } from "@/app/auth-api";
+import { NEXT_PUBLIC_BACKEND_URL } from "@/lib/api";
 
 export default function SignUpPage() {
-  const router = useRouter()
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
       await authApi.signUp({
         name: formData.name,
         email: formData.email,
-        password: formData.password
-      })
-      
+        password: formData.password,
+      });
+
       // Token is automatically stored in authApi.signUp
       // Store email for verification page
-      localStorage.setItem("verificationEmail", formData.email)
-      
-      router.push("/verify-email")
+      localStorage.setItem("verificationEmail", formData.email);
+
+      router.push("/verify-email");
     } catch (error) {
-      console.error("Sign up error:", error)
-      alert("Sign up failed. Please try again.")
+      console.error("Sign up error:", error);
+      alert("Sign up failed. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSocialSignUp = async (provider: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/auth/sign-in-social", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ provider }),
         },
-        credentials: "include",
-        body: JSON.stringify({ provider }),
-      })
+      );
 
       if (!res.ok) {
-        throw new Error("Failed to initiate social login")
+        throw new Error("Failed to initiate social login");
       }
 
-      const data = await res.json()
+      const data = await res.json();
       if (data.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       }
     } catch (error) {
-      console.error("Social sign up error:", error)
+      console.error("Social sign up error:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      
+
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
             <Logo />
           </Link>
           <h1 className="text-2xl font-bold">Create your account</h1>
-          <p className="text-muted-foreground mt-2">Start your learning journey today</p>
+          <p className="text-muted-foreground mt-2">
+            Start your learning journey today
+          </p>
         </div>
 
         <Card className="border-none shadow-xl">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl">Sign up</CardTitle>
-            <CardDescription>Choose your preferred sign up method</CardDescription>
+            <CardDescription>
+              Choose your preferred sign up method
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -138,7 +152,9 @@ export default function SignUpPage() {
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with email
+                </span>
               </div>
             </div>
 
@@ -149,12 +165,14 @@ export default function SignUpPage() {
                   id="name"
                   placeholder="John Doe"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
                   disabled={isLoading}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -165,13 +183,15 @@ export default function SignUpPage() {
                     placeholder="you@example.com"
                     className="pl-10"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     required
                     disabled={isLoading}
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -180,7 +200,9 @@ export default function SignUpPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a strong password"
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
                     required
                     disabled={isLoading}
                     minLength={8}
@@ -190,10 +212,16 @@ export default function SignUpPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 8 characters
+                </p>
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
@@ -210,7 +238,10 @@ export default function SignUpPage() {
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/sign-in" className="text-primary hover:underline font-medium">
+              <Link
+                href="/sign-in"
+                className="text-primary hover:underline font-medium"
+              >
                 Sign in
               </Link>
             </p>
@@ -219,11 +250,15 @@ export default function SignUpPage() {
 
         <p className="text-center text-xs text-muted-foreground mt-6">
           By signing up, you agree to our{" "}
-          <Link href="#" className="hover:underline">Terms of Service</Link>
-          {" "}and{" "}
-          <Link href="#" className="hover:underline">Privacy Policy</Link>
+          <Link href="#" className="hover:underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="#" className="hover:underline">
+            Privacy Policy
+          </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }

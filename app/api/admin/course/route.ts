@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET() {
   try {
-    // Get all cookies from the incoming request
-    const cookieStore = await import("next/headers").then((mod) =>
-      mod.cookies(),
-    );
-    const cookies = cookieStore.getAll();
+    const headers = await getBackendHeaders();
 
-    // Build Cookie header manually
-    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-
-    const response = await fetch("http://localhost:8080/course", {
+    const response = await fetch(`${BACKEND_URL}/course`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookieHeader,
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -39,24 +31,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    // Get all cookies from the incoming request
-    const cookieStore = await import("next/headers").then((mod) =>
-      mod.cookies(),
-    );
-    const cookies = cookieStore.getAll();
-
-    // Build Cookie header manually
-    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+    const headers = await getBackendHeaders();
 
     // Get the request body
     const body = await request.json();
 
-    const response = await fetch("http://localhost:8080/course", {
+    const response = await fetch(`${BACKEND_URL}/course`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookieHeader,
-      },
+      headers,
       body: JSON.stringify(body),
     });
 
@@ -77,4 +59,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

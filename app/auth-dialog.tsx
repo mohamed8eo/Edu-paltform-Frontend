@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authApi, tokenManager } from "./auth-api";
+import { NEXT_PUBLIC_BACKEND_URL } from "@/lib/api";
 
 type AuthView =
   | "sign-in"
@@ -221,14 +222,17 @@ function SignInForm({
     setIsLoading(true);
     try {
       console.log("📡 Calling /auth/sign-in-social...");
-      const res = await fetch("http://localhost:8080/auth/sign-in-social", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ provider }),
         },
-        credentials: "include",
-        body: JSON.stringify({ provider }),
-      });
+      );
 
       console.log("📥 Response status:", res.status);
       console.log("🍪 Set-Cookie header:", res.headers.get("set-cookie"));

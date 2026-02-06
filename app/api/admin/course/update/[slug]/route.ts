@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function PUT(
   request: Request,
@@ -7,29 +9,16 @@ export async function PUT(
   try {
     const { slug } = await params;
 
-    // Get all cookies from the incoming request
-    const cookieStore = await import("next/headers").then((mod) =>
-      mod.cookies(),
-    );
-    const cookies = cookieStore.getAll();
-
-    // Build Cookie header manually
-    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+    const headers = await getBackendHeaders();
 
     // Get the request body
     const body = await request.json();
 
-    const response = await fetch(
-      `http://localhost:8080/course/update/${slug}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: cookieHeader,
-        },
-        body: JSON.stringify(body),
-      },
-    );
+    const response = await fetch(`${BACKEND_URL}/course/update/${slug}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       return NextResponse.json(

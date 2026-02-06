@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:8080/auth";
+import { NEXT_PUBLIC_BACKEND_URL } from "@/lib/api";
+
+const API_BASE_URL = `${NEXT_PUBLIC_BACKEND_URL}/auth`;
 
 export interface SignUpPayload {
   name: string;

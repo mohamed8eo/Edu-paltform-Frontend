@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BACKEND_URL } from "@/lib/api";
+import { getBackendHeaders } from "@/lib/api-server";
 
 export async function GET(
   request: NextRequest,
@@ -9,24 +11,13 @@ export async function GET(
     const resolvedParams = await params;
     const { slug } = resolvedParams;
 
-    const token = request.cookies.get("better-auth.session_token")?.value;
+    const headers = await getBackendHeaders();
 
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Not authenticated" },
-        { status: 401 },
-      );
-    }
-
-    // Call backend endpoint to get all completed lessons
     const response = await fetch(
-      `http://localhost:8080/course/${slug}/lessons/progress`,
+      `${BACKEND_URL}/course/${slug}/lessons/progress`,
       {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `better-auth.session_token=${token}`,
-        },
+        headers,
       },
     );
 
