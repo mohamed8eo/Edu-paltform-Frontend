@@ -249,7 +249,7 @@ function SignInForm({
       let data;
       try {
         data = await res.json();
-        console.log("📥 Response data:", data);
+        console.log("📥 Response data:", JSON.stringify(data));
       } catch (e) {
         data = {};
         console.log("⚠️ No JSON response body");
@@ -267,13 +267,26 @@ function SignInForm({
         );
       }
 
+      // Check for redirect URL in response
       if (data.url) {
         console.log("🔄 AuthDialog: Redirecting to:", data.url);
         window.location.href = data.url;
+      } else if (
+        res.url &&
+        res.url !== `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`
+      ) {
+        // Check if there's a redirect in the response URL
+        console.log("🔄 AuthDialog: Following redirect to:", res.url);
+        window.location.href = res.url;
       } else {
         // No redirect URL, check if we have the token
         if (data.token) {
+          console.log("✅ AuthDialog: Token received, redirecting to /home");
           window.location.href = "/home";
+        } else {
+          console.log(
+            "⚠️ AuthDialog: No redirect URL or token, staying on page",
+          );
         }
       }
     } catch (error: any) {

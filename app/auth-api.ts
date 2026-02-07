@@ -254,8 +254,20 @@ export const authApi = {
     const setCookieHeader = res.headers.get("set-cookie");
     console.log("🍪 Set-Cookie header:", setCookieHeader || "not present");
 
+    // IMPORTANT: Check the redirect URL
+    const redirectUrl = res.url;
+    console.log("🌐 Response redirect URL:", redirectUrl);
+
     const data = await handleResponse(res);
     console.log("📥 Social sign-in response data:", data);
+
+    // If there's a redirect URL in the response, navigate to it
+    // This will take the user to the OAuth provider
+    if (data.url) {
+      console.log("🔄 Redirecting to OAuth provider:", data.url);
+      window.location.href = data.url;
+      return data;
+    }
 
     return data;
   },

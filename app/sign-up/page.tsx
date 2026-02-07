@@ -58,6 +58,7 @@ export default function SignUpPage() {
   const handleSocialSignUp = async (provider: string) => {
     setIsLoading(true);
     try {
+      console.log("📡 Calling /auth/sign-in-social...");
       const res = await fetch(
         `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`,
         {
@@ -70,16 +71,30 @@ export default function SignUpPage() {
         },
       );
 
+      console.log("📥 Response status:", res.status);
+      console.log("🍪 Set-Cookie header:", res.headers.get("set-cookie"));
+      console.log("🌐 Response URL:", res.url);
+
       if (!res.ok) {
         throw new Error("Failed to initiate social login");
       }
 
       const data = await res.json();
+      console.log("📥 Response data:", JSON.stringify(data));
+
       if (data.url) {
+        console.log("🔄 Redirecting to:", data.url);
         window.location.href = data.url;
+      } else if (
+        res.url &&
+        res.url !== `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`
+      ) {
+        console.log("🔄 Following redirect to:", res.url);
+        window.location.href = res.url;
       }
     } catch (error) {
-      console.error("Social sign up error:", error);
+      console.error("❌ Social sign up error:", error);
+      alert("Failed to initiate social login. Please try again.");
     } finally {
       setIsLoading(false);
     }

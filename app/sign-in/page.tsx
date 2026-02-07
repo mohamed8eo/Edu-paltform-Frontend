@@ -89,18 +89,16 @@ export default function SignInPage() {
     console.log("🔐 Starting social sign-in with:", provider);
     setIsLoading(true);
     try {
-      console.log("📡 Calling /auth/sign-in-social...");
-      const res = await fetch(
-        `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ provider }),
+      // Use the server-side API route which will handle token storage properly
+      console.log("📡 Calling /api/auth/sign-in-social...");
+      const res = await fetch("/api/auth/sign-in-social", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        credentials: "include",
+        body: JSON.stringify({ provider }),
+      });
 
       console.log("📥 Response status:", res.status);
       console.log("🍪 Set-Cookie header:", res.headers.get("set-cookie"));
@@ -113,7 +111,7 @@ export default function SignInPage() {
       }
 
       // IMPORTANT: Try to get token from response body
-      // Backend should return { token, ... } for non-HttpOnly access
+      // The server-side route ensures we can access the token
       let data;
       try {
         data = await res.json();
@@ -124,6 +122,7 @@ export default function SignInPage() {
       }
 
       // If token is in response body, store it in localStorage
+      // This ensures consistency with email/password authentication
       if (data.token) {
         console.log(
           "💾 Token found in response body, storing in localStorage...",
@@ -131,12 +130,12 @@ export default function SignInPage() {
         tokenManager.setToken(data.token);
       } else {
         console.log(
-          "⚠️ No token in response body - will rely on HttpOnly cookie",
+          "⚠️ No token in response body - relying on HttpOnly cookie",
         );
       }
 
       if (data.url) {
-        console.log("🔄 Redirecting to:", data.url);
+        console.log("🔄 Redirecting to OAuth provider:", data.url);
         window.location.href = data.url;
       } else {
         // No redirect URL, check if we have the token
