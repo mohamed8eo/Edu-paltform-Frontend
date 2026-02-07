@@ -10,9 +10,9 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ms-webdesign | Hoogwaardige Websites",
-  description: "Moderne, resultaatgerichte webdesigns die bezoekers omzetten in klanten",
-  generator: "v0.app",
+  title: "Learn Hub",
+  description: " Learn Hub - Your Online Learning Platform",
+  generator: "v1.app",
 }
 
 export default function RootLayout({
