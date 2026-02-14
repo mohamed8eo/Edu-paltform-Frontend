@@ -6,40 +6,24 @@ export async function GET() {
   try {
     const headers = await getBackendHeaders();
 
-    console.log(
-      "🔍 [API/auth/check] Forwarding headers with Authorization Bearer token",
-    );
-
-    const response = await fetch(`${BACKEND_URL}/auth/session`, {
+    // Validate token by calling GET /user/me
+    // If the token is valid, the backend will return user data
+    const response = await fetch(`${BACKEND_URL}/user/me`, {
       method: "GET",
       headers,
     });
 
-    console.log("Session check response status:", response.status);
-
     if (response.ok) {
       const data = await response.json();
-      console.log("Session check raw response:", data);
-
-      // Check if the session is actually authenticated
-      if (data.authenticated === true) {
-        console.log("Session check succeeded: authenticated = true");
-        return NextResponse.json({ valid: true, user: data });
-      } else {
-        console.log(
-          "Session check failed: authenticated =",
-          data.authenticated,
-        );
-        return NextResponse.json({ valid: false }, { status: 401 });
-      }
+      const user = data.UserAccount || data;
+      return NextResponse.json({ valid: true, user });
     } else {
-      console.log("Session check failed: HTTP status", response.status);
       return NextResponse.json({ valid: false }, { status: 401 });
     }
   } catch (error) {
-    console.error("Session check error:", error);
+    console.error("Auth check error:", error);
     return NextResponse.json(
-      { valid: false, error: "Failed to verify session" },
+      { valid: false, error: "Failed to verify authentication" },
       { status: 500 },
     );
   }

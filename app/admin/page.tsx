@@ -34,7 +34,7 @@ import type {
   ErrorStats,
   DashboardStats,
 } from "@/types/admin";
-import { authApi } from "../auth-api";
+import { tokenManager } from "../auth-api";
 
 const API_BASE_URL = "/api";
 

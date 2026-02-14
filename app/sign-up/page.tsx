@@ -19,7 +19,6 @@ import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/logo";
 import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react";
 import { authApi } from "@/app/auth-api";
-import { NEXT_PUBLIC_BACKEND_URL } from "@/lib/api";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -43,61 +42,23 @@ export default function SignUpPage() {
       });
 
       // Token is automatically stored in authApi.signUp
-      // Store email for verification page
-      localStorage.setItem("verificationEmail", formData.email);
-
-      router.push("/verify-email");
+      router.push("/home");
     } catch (error) {
       console.error("Sign up error:", error);
-      alert("Sign up failed. Please try again.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Sign up failed. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialSignUp = async (provider: string) => {
+  const handleSocialSignUp = (provider: "google" | "github") => {
     setIsLoading(true);
-    try {
-      console.log("📡 Calling /auth/sign-in-social...");
-      const res = await fetch(
-        `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ provider }),
-        },
-      );
-
-      console.log("📥 Response status:", res.status);
-      console.log("🍪 Set-Cookie header:", res.headers.get("set-cookie"));
-      console.log("🌐 Response URL:", res.url);
-
-      if (!res.ok) {
-        throw new Error("Failed to initiate social login");
-      }
-
-      const data = await res.json();
-      console.log("📥 Response data:", JSON.stringify(data));
-
-      if (data.url) {
-        console.log("🔄 Redirecting to:", data.url);
-        window.location.href = data.url;
-      } else if (
-        res.url &&
-        res.url !== `${NEXT_PUBLIC_BACKEND_URL}/auth/sign-in-social`
-      ) {
-        console.log("🔄 Following redirect to:", res.url);
-        window.location.href = res.url;
-      }
-    } catch (error) {
-      console.error("❌ Social sign up error:", error);
-      alert("Failed to initiate social login. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    // Redirect to backend OAuth login URL
+    authApi.signInSocial(provider);
   };
 
   return (
@@ -143,7 +104,7 @@ export default function SignUpPage() {
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   />
                   <path
                     fill="currentColor"
@@ -213,14 +174,15 @@ export default function SignUpPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a strong password"
+                    placeholder="Create a password"
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
                     }
                     required
                     disabled={isLoading}
-                    minLength={8}
+                    minLength={4}
+                    maxLength={12}
                   />
                   <button
                     type="button"
@@ -235,7 +197,7 @@ export default function SignUpPage() {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters
+                  Must be 4-12 characters
                 </p>
               </div>
 

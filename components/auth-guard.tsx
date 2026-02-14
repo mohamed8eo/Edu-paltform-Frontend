@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { tokenManager } from '@/app/auth-api'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -14,9 +15,7 @@ export function AuthGuard({ children, redirectTo = '/' }: AuthGuardProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('better-auth.session_token='))
-    
-    if (!token) {
+    if (!tokenManager.hasToken()) {
       router.push(redirectTo)
     } else {
       setIsAuthenticated(true)

@@ -143,7 +143,7 @@ export default function CoursesPage() {
       const response = await fetch(
         `${API_BASE_URL}/course/update/${data.slug}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },

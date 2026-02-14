@@ -156,7 +156,7 @@ export default function CategoriesPage() {
       console.log("Payload:", JSON.stringify(payload, null, 2));
 
       const response = await fetch(endpoint, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },

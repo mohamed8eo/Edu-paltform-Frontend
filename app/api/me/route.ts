@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import { BACKEND_URL } from "@/lib/api";
 import { getBackendHeaders } from "@/lib/api-server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    console.log("🔍 [API/me] BACKEND_URL:", BACKEND_URL);
-
     const headers = await getBackendHeaders();
 
-    console.log(
-      "🔍 [API/me] Forwarding headers with Authorization Bearer token",
-    );
-
-    const response = await fetch(`${BACKEND_URL}/me`, {
+    const response = await fetch(`${BACKEND_URL}/user/me`, {
       method: "GET",
       headers,
     });
@@ -24,6 +17,13 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
+
+    // The backend wraps user data in { UserAccount: {...} }
+    // Extract it to return a flat user object
+    if (data.UserAccount) {
+      return NextResponse.json(data.UserAccount);
+    }
+
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(

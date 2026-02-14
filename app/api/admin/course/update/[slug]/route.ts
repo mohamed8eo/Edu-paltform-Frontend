@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { BACKEND_URL } from "@/lib/api";
 import { getBackendHeaders } from "@/lib/api-server";
 
-export async function PUT(
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
@@ -10,12 +10,10 @@ export async function PUT(
     const { slug } = await params;
 
     const headers = await getBackendHeaders();
-
-    // Get the request body
     const body = await request.json();
 
     const response = await fetch(`${BACKEND_URL}/course/update/${slug}`, {
-      method: "PUT",
+      method: "PATCH",
       headers,
       body: JSON.stringify(body),
     });

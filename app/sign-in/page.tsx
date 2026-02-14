@@ -19,7 +19,6 @@ import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/logo";
 import { Eye, EyeOff, Github, Mail, Loader2 } from "lucide-react";
 import { authApi, tokenManager } from "@/app/auth-api";
-import { NEXT_PUBLIC_BACKEND_URL } from "@/lib/api";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -33,35 +32,7 @@ export default function SignInPage() {
   useEffect(() => {
     // Check if user already has a valid token
     if (tokenManager.hasToken()) {
-      console.log("✅ Token found on mount, redirecting to /home");
       router.push("/home");
-    }
-
-    // Check if this is an OAuth redirect (has code or state param)
-    const searchParams = new URLSearchParams(window.location.search);
-    const hasOAuthParams =
-      searchParams.has("code") || searchParams.has("state");
-
-    if (hasOAuthParams) {
-      console.log("🔐 OAuth redirect detected!");
-      console.log("🔍 Search params:", Object.fromEntries(searchParams));
-
-      // Wait a moment for cookies to be set
-      setTimeout(() => {
-        console.log("🍪 Cookies after OAuth redirect:", document.cookie);
-        const token = tokenManager.getToken();
-        console.log(
-          "🔑 Token after redirect:",
-          token ? `${token.substring(0, 20)}...` : "null",
-        );
-
-        if (token) {
-          console.log("✅ Token found after OAuth, redirecting to /home");
-          router.push("/home");
-        } else {
-          console.log("❌ No token found after OAuth redirect");
-        }
-      }, 1000);
     }
   }, [router]);
 
@@ -79,75 +50,20 @@ export default function SignInPage() {
       router.push("/home");
     } catch (error) {
       console.error("Sign in error:", error);
-      alert("Sign in failed. Please check your credentials.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Sign in failed. Please check your credentials.",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialSignIn = async (provider: string) => {
-    console.log("🔐 Starting social sign-in with:", provider);
+  const handleSocialSignIn = (provider: "google" | "github") => {
     setIsLoading(true);
-    try {
-      // Use the server-side API route which will handle token storage properly
-      console.log("📡 Calling /api/auth/sign-in-social...");
-      const res = await fetch("/api/auth/sign-in-social", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ provider }),
-      });
-
-      console.log("📥 Response status:", res.status);
-      console.log("🍪 Set-Cookie header:", res.headers.get("set-cookie"));
-      console.log("🌐 Response URL:", res.url);
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("❌ Social sign-in failed:", errorText);
-        throw new Error("Failed to initiate social login");
-      }
-
-      // IMPORTANT: Try to get token from response body
-      // The server-side route ensures we can access the token
-      let data;
-      try {
-        data = await res.json();
-        console.log("📥 Response data:", data);
-      } catch (e) {
-        data = {};
-        console.log("⚠️ No JSON response body");
-      }
-
-      // If token is in response body, store it in localStorage
-      // This ensures consistency with email/password authentication
-      if (data.token) {
-        console.log(
-          "💾 Token found in response body, storing in localStorage...",
-        );
-        tokenManager.setToken(data.token);
-      } else {
-        console.log(
-          "⚠️ No token in response body - relying on HttpOnly cookie",
-        );
-      }
-
-      if (data.url) {
-        console.log("🔄 Redirecting to OAuth provider:", data.url);
-        window.location.href = data.url;
-      } else {
-        // No redirect URL, check if we have the token
-        if (data.token) {
-          router.push("/home");
-        }
-      }
-    } catch (error) {
-      console.error("❌ Social sign in error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    // Redirect to backend OAuth login URL
+    authApi.signInSocial(provider);
   };
 
   return (
@@ -244,15 +160,7 @@ export default function SignInPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -292,7 +200,7 @@ export default function SignInPage() {
             </form>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              {"Don't have an account? "}
               <Link
                 href="/sign-up"
                 className="text-primary hover:underline font-medium"
